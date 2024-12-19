@@ -5,7 +5,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "private": false,
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "React bindings for argon router",
   "keywords": [
     "effector",
@@ -44,7 +44,7 @@
     "url": "https://github.com/movpushmov/argon-router/issues"
   },
   "dependencies": {
-    "@argon-router/core": "^0.0.1"
+    "@argon-router/core": "^0.1.0"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.24.1",
