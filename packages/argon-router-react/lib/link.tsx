@@ -5,11 +5,15 @@ import { useUnit } from 'effector-react';
 
 type AnchorProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'>;
 
-interface LinkProps<Params> extends AnchorProps {
+type BaseLinkProps<Params> = {
   to: Route<Params>;
-  params: Params;
   children?: ReactNode;
-}
+} & AnchorProps;
+
+type LinkProps<Params> =
+  Params extends Record<string, never>
+    ? BaseLinkProps<Params> & { params?: Params }
+    : BaseLinkProps<Params> & { params: Params };
 
 export function Link<Params = void>(props: LinkProps<Params>) {
   const { to, params, onClick, ...anchorProps } = props;
