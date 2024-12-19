@@ -12,3 +12,7 @@ export function watchCalls(unit: Unit<any>) {
 
   return mockedFn;
 }
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

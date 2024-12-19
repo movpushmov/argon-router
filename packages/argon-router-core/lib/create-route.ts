@@ -17,11 +17,8 @@ import { ParseUrlParams } from 'typed-url-params';
 
 interface Config<T> {
   path: T;
-
   parent?: Route<any>;
-  index?: boolean;
-
-  beforeOpen?: Effect<any, any, any>[];
+  beforeOpen?: Effect<void, any, any>[];
 }
 
 export function createRoute<T extends string, Params = ParseUrlParams<T>>(
@@ -31,11 +28,21 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
 
   const waitForAsyncBundleFx = createEffect(() => asyncImport?.());
 
+  const beforeOpenFx = createEffect(async () => {
+    for (const fx of config.beforeOpen ?? []) {
+      await fx();
+    }
+  });
+
   const openFx = createEffect(async (payload: RouteOpenedPayload<Params>) => {
     await waitForAsyncBundleFx();
+    await beforeOpenFx();
 
     if (config.parent) {
-      await (config.parent as InternalRoute<any>).internal.openFx(payload);
+      await (config.parent as InternalRoute<any>).internal.openFx({
+        ...payload,
+        historyIgnore: true,
+      });
     }
 
     return payload;
@@ -78,6 +85,11 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
     clock: opened,
     fn: () => true,
     target: $isOpened,
+  });
+
+  sample({
+    clock: close,
+    target: closed,
   });
 
   sample({

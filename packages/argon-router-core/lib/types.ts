@@ -124,7 +124,11 @@ export interface InternalRouteParams<T> {
   close: EventCallable<void>;
 
   beforeOpen?: Effect<any, any, any>[];
-  openFx: Effect<RouteOpenedPayload<T>, RouteOpenedPayload<T>, Error>;
+  openFx: Effect<
+    RouteOpenedPayload<T> & { historyIgnore?: boolean },
+    RouteOpenedPayload<T> & { historyIgnore?: boolean },
+    Error
+  >;
 
   setAsyncImport: (value: AsyncBundleImport) => void;
 }

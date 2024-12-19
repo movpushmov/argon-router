@@ -15,16 +15,32 @@ import { spread } from 'patronum';
 
 interface RouterConfig {
   base?: string;
-  history?: History;
   routes: Route<any>[];
 }
 
+function fromLocation(location: { pathname: string; search: string }) {
+  const queryParams = new URLSearchParams(location.search);
+
+  return {
+    path: location.pathname,
+    query: [...queryParams.keys()].reduce<Query>((acc, parameter) => {
+      if (acc[parameter]) {
+        acc[parameter] = queryParams.getAll(parameter);
+      } else {
+        acc[parameter] = queryParams.get(parameter)!;
+      }
+
+      return acc;
+    }, {}),
+  };
+}
+
 export function createRouter(config: RouterConfig): Router {
-  const { base = '/', history, routes } = config;
+  const { base = '/', routes } = config;
 
   const $query = createStore<Query>({});
-  const $history = createStore(history ?? null);
-  const $path = createStore<string>('/');
+  const $history = createStore<History | null>(null);
+  const $path = createStore<string>(null as unknown as string);
   const $activeRoutes = createStore<Route<any>[]>([]);
 
   const setHistory = createEvent<History>();
@@ -42,10 +58,13 @@ export function createRouter(config: RouterConfig): Router {
 
     while (internalRoute.internal.parent) {
       internalRoute = internalRoute.internal.parent;
-      path.unshift(internalRoute.internal.path);
+
+      if (internalRoute.internal.path !== '/') {
+        path.unshift(internalRoute.internal.path);
+      }
     }
 
-    const joinedPath = (base === '/' ? path : [base, ...path]).join('');
+    const joinedPath = base === '/' ? path.join('') : [base, ...path].join('');
 
     return {
       route: route as InternalRoute<any>,
@@ -78,7 +97,7 @@ export function createRouter(config: RouterConfig): Router {
       if (replace) {
         history.replace(payload);
       } else {
-        history.push(payload);
+        history.push(payload.pathname);
       }
     },
   });
@@ -87,13 +106,15 @@ export function createRouter(config: RouterConfig): Router {
     sample({
       clock: route.opened,
       source: $activeRoutes,
+      filter: (routes) => !routes.includes(route),
       fn: (routes) => [...routes, route],
       target: $activeRoutes,
     });
 
     sample({
       clock: route.opened,
-      fn: ({ params, query, replace }) => ({
+      filter: (payload: any) => !payload.historyIgnore,
+      fn: ({ params, query, replace } = { params: {} }) => ({
         path: toPath(params),
         query: query ?? {},
         replace,
@@ -133,6 +154,7 @@ export function createRouter(config: RouterConfig): Router {
         const matchResult = fromPath(path);
 
         if (!matchResult) {
+          route.internal.close();
           continue;
         } else {
           await route.internal.openFx({ query, params: matchResult.params });
@@ -148,23 +170,20 @@ export function createRouter(config: RouterConfig): Router {
   });
 
   sample({
-    clock: locationUpdated,
-    fn: ({ pathname, search }) => {
-      const queryParams = new URLSearchParams(search);
+    clock: $history,
+    filter: Boolean,
+    fn: (history) => fromLocation(history.location),
+    target: spread({
+      targets: {
+        path: $path,
+        query: $query,
+      },
+    }),
+  });
 
-      return {
-        path: pathname,
-        query: [...queryParams.keys()].reduce<Query>((acc, parameter) => {
-          if (acc[parameter]) {
-            acc[parameter] = queryParams.getAll(parameter);
-          } else {
-            acc[parameter] = queryParams.get(parameter)!;
-          }
-
-          return acc;
-        }, {}),
-      };
-    },
+  sample({
+    clock: [locationUpdated],
+    fn: (location) => fromLocation(location),
     target: spread({
       targets: {
         path: $path,
