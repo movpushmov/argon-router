@@ -38,10 +38,11 @@ function fromLocation(location: { pathname: string; search: string }) {
 export function createRouter(config: RouterConfig): Router {
   const { base = '/', routes } = config;
 
+  const $history = createStore<History | null>(null, { serialize: 'ignore' });
+  const $activeRoutes = createStore<Route<any>[]>([], { serialize: 'ignore' });
+
   const $query = createStore<Query>({});
-  const $history = createStore<History | null>(null);
   const $path = createStore<string>(null as unknown as string);
-  const $activeRoutes = createStore<Route<any>[]>([]);
 
   const setHistory = createEvent<History>();
 
