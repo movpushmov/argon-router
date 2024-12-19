@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.3](https://github.com/movpushmov/argon-router/compare/v0.1.2...v0.1.3) (2024-12-19)
+
+### Bug Fixes
+
+- **core:** ignore non serializing stores ([b53edbd](https://github.com/movpushmov/argon-router/commit/b53edbdbe99070abb7c0bcb3da41efd2986bf7f0))
+
 ## [0.1.2](https://github.com/movpushmov/argon-router/compare/v0.1.1...v0.1.2) (2024-12-19)
 
 ### Bug Fixes
