@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/movpushmov/argon-router/compare/v0.1.3...v0.1.4) (2024-12-24)
+
+### Bug Fixes
+
+- work with query params ([943d94b](https://github.com/movpushmov/argon-router/commit/943d94b99043b482f5bea32721c75675a65ecb4c))
+
 ## [0.1.3](https://github.com/movpushmov/argon-router/compare/v0.1.2...v0.1.3) (2024-12-19)
 
 ### Bug Fixes
