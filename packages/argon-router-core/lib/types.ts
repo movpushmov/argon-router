@@ -23,7 +23,7 @@ export type RawConfig = Record<
 
 export type AsyncBundleImport = () => Promise<{ default: any }>;
 
-export type Query = Record<string, string | string[]>;
+export type Query = Record<string, string | null | Array<string | null>>;
 
 export type ReadyConfig<T extends RawConfig> = {
   [K in keyof T]: T[K] extends StringParameter

@@ -93,4 +93,57 @@ describe('router', () => {
 
     expect(history.location.pathname).toBe('/one/nested/hello');
   });
+
+  test('navigate with query', async () => {
+    const scope = fork();
+    const route = createRoute({ path: '/auth' });
+    const router = createRouter({
+      routes: [route],
+    });
+
+    const history = createMemoryHistory();
+
+    await allSettled(router.setHistory, { scope, params: history });
+
+    history.push('/auth?login=movpushmov&password=123&retry=1&retry=1');
+
+    await vi.waitFor(
+      () => expect(scope.getState(router.$activeRoutes)[0]).toEqual(route),
+      { timeout: 100 },
+    );
+
+    expect(scope.getState(router.$query)).toStrictEqual({
+      login: 'movpushmov',
+      password: '123',
+      retry: ['1', '1'],
+    });
+  });
+
+  test.only('route.open with query', async () => {
+    const scope = fork();
+    const route = createRoute({ path: '/auth' });
+    const router = createRouter({
+      routes: [route],
+    });
+
+    const history = createMemoryHistory();
+
+    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(route.open, {
+      scope,
+      params: {
+        query: { login: 'movpushmov', password: '123', retry: ['1', '1'] },
+        params: {},
+      },
+    });
+
+    expect(history.location.pathname).toBe('/auth');
+    expect(history.location.search).toBe(
+      '?login=movpushmov&password=123&retry=1&retry=1',
+    );
+  });
+
+  test('navigate with params', async () => {});
+
+  test('route.open with params', async () => {});
 });

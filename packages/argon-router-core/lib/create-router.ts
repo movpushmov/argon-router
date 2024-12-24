@@ -13,26 +13,11 @@ import { trackQueryFactory } from './track-query';
 import type { History } from 'history';
 import { spread } from 'patronum';
 
+import queryString from 'query-string';
+
 interface RouterConfig {
   base?: string;
   routes: Route<any>[];
-}
-
-function fromLocation(location: { pathname: string; search: string }) {
-  const queryParams = new URLSearchParams(location.search);
-
-  return {
-    path: location.pathname,
-    query: [...queryParams.keys()].reduce<Query>((acc, parameter) => {
-      if (acc[parameter]) {
-        acc[parameter] = queryParams.getAll(parameter);
-      } else {
-        acc[parameter] = queryParams.get(parameter)!;
-      }
-
-      return acc;
-    }, {}),
-  };
 }
 
 export function createRouter(config: RouterConfig): Router {
@@ -49,7 +34,10 @@ export function createRouter(config: RouterConfig): Router {
   const back = createEvent();
   const forward = createEvent();
 
-  const locationUpdated = createEvent<{ pathname: string; search: string }>();
+  const locationUpdated = createEvent<{
+    pathname: string;
+    query: Query;
+  }>();
 
   const mappedRoutes = routes.map((route) => {
     let internalRoute = route as InternalRoute<any>;
@@ -75,7 +63,7 @@ export function createRouter(config: RouterConfig): Router {
     };
   });
 
-  const updateHistoryFx = attach({
+  const navigateFx = attach({
     source: { history: $history },
     effect: async (
       { history },
@@ -93,12 +81,55 @@ export function createRouter(config: RouterConfig): Router {
         throw new Error('history not found');
       }
 
-      const payload = { pathname: path, query };
+      const payload = {
+        pathname: path,
+        search: `?${queryString.stringify(query)}`,
+      };
 
       if (replace) {
         history.replace(payload);
       } else {
-        history.push(payload.pathname);
+        history.push(payload);
+      }
+    },
+  });
+
+  const subscribeHistoryFx = createEffect((history: History) => {
+    const historyLocationUpdated = scopeBind(locationUpdated);
+
+    historyLocationUpdated({
+      pathname: history.location.pathname,
+      query: queryString.parse(history.location.search),
+    });
+
+    if (!history) {
+      throw new Error();
+    }
+
+    history.listen(({ location }) => {
+      historyLocationUpdated({
+        pathname: location.pathname,
+        query: queryString.parse(location.search),
+      });
+    });
+  });
+
+  const openRoutesByPathFx = attach({
+    source: { query: $query, path: $path },
+    effect: async ({ query, path }) => {
+      for (const { route, fromPath } of mappedRoutes) {
+        const matchResult = fromPath(path);
+
+        if (!matchResult) {
+          route.internal.close();
+          continue;
+        } else {
+          await route.internal.openFx({
+            query,
+            params: matchResult.params,
+            historyIgnore: true,
+          });
+        }
       }
     },
   });
@@ -120,7 +151,7 @@ export function createRouter(config: RouterConfig): Router {
         query: query ?? {},
         replace,
       }),
-      target: updateHistoryFx,
+      target: navigateFx,
     });
 
     sample({
@@ -136,34 +167,6 @@ export function createRouter(config: RouterConfig): Router {
     target: $history,
   });
 
-  const subscribeHistoryFx = createEffect((history: History) => {
-    const historyLocationUpdated = scopeBind(locationUpdated);
-
-    if (!history) {
-      throw new Error();
-    }
-
-    history.listen(({ location }) => {
-      historyLocationUpdated(location);
-    });
-  });
-
-  const openRoutesByPathFx = attach({
-    source: { query: $query, path: $path },
-    effect: async ({ query, path }) => {
-      for (const { route, fromPath } of mappedRoutes) {
-        const matchResult = fromPath(path);
-
-        if (!matchResult) {
-          route.internal.close();
-          continue;
-        } else {
-          await route.internal.openFx({ query, params: matchResult.params });
-        }
-      }
-    },
-  });
-
   sample({
     clock: $history,
     filter: Boolean,
@@ -171,31 +174,20 @@ export function createRouter(config: RouterConfig): Router {
   });
 
   sample({
-    clock: $history,
-    filter: Boolean,
-    fn: (history) => fromLocation(history.location),
-    target: spread({
-      targets: {
-        path: $path,
-        query: $query,
-      },
+    clock: locationUpdated,
+    fn: (location) => ({
+      path: location.pathname,
+      query: location.query ?? {},
     }),
-  });
-
-  sample({
-    clock: [locationUpdated],
-    fn: (location) => fromLocation(location),
-    target: spread({
-      targets: {
-        path: $path,
-        query: $query,
-      },
-    }),
-  });
-
-  sample({
-    clock: $path,
-    target: openRoutesByPathFx,
+    target: [
+      spread({
+        targets: {
+          path: $path,
+          query: $query,
+        },
+      }),
+      openRoutesByPathFx,
+    ],
   });
 
   return {
