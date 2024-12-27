@@ -57,7 +57,7 @@ type PayloadBase = {
 };
 
 export type RouteOpenedPayload<T> = T extends void
-  ? undefined | PayloadBase
+  ? void | undefined | PayloadBase
   : { params: T } & PayloadBase;
 
 export interface Route<T> {
