@@ -75,7 +75,7 @@ describe('router', () => {
     });
 
     await allSettled(router.setHistory, { scope, params: history });
-    await allSettled(route1.open, { scope, params: { params: {} } });
+    await allSettled(route1.open, { scope, params: {} });
 
     expect(history.location.pathname).toBe('/one');
 
@@ -133,7 +133,6 @@ describe('router', () => {
       scope,
       params: {
         query: { login: 'movpushmov', password: '123', retry: ['1', '1'] },
-        params: {},
       },
     });
 

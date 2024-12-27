@@ -51,11 +51,14 @@ export interface QueryTracker<ParametersConfig extends RawConfig> {
   getPayload: (config: ReadyConfig<ParametersConfig>) => Record<string, any>;
 }
 
-export type RouteOpenedPayload<T> = {
-  params: T;
-  query?: Record<string, any>;
+type PayloadBase = {
+  query?: Query;
   replace?: boolean;
 };
+
+export type RouteOpenedPayload<T> = T extends void
+  ? undefined | PayloadBase
+  : { params: T } & PayloadBase;
 
 export interface Route<T> {
   $params: Store<T>;

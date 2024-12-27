@@ -20,6 +20,12 @@ interface RouterConfig {
   routes: Route<any>[];
 }
 
+type NavigatePayload = {
+  path: string;
+  query: Query;
+  replace?: boolean;
+};
+
 export function createRouter(config: RouterConfig): Router {
   const { base = '/', routes } = config;
 
@@ -65,18 +71,7 @@ export function createRouter(config: RouterConfig): Router {
 
   const navigateFx = attach({
     source: { history: $history },
-    effect: async (
-      { history },
-      {
-        path,
-        query,
-        replace,
-      }: {
-        path: string;
-        query: Query;
-        replace?: boolean;
-      },
-    ) => {
+    effect: async ({ history }, { path, query, replace }: NavigatePayload) => {
       if (!history) {
         throw new Error('history not found');
       }
@@ -145,12 +140,16 @@ export function createRouter(config: RouterConfig): Router {
 
     sample({
       clock: route.opened,
-      filter: (payload: any) => !payload.historyIgnore,
-      fn: ({ params, query, replace } = { params: {} }) => ({
-        path: toPath(params),
-        query: query ?? {},
-        replace,
-      }),
+      filter: (payload: any) => !payload?.historyIgnore,
+      fn: (payload): NavigatePayload => {
+        return {
+          path: toPath(
+            payload && 'params' in payload ? payload.params : undefined,
+          ),
+          query: payload?.query ?? {},
+          replace: payload?.replace,
+        };
+      },
       target: navigateFx,
     });
 

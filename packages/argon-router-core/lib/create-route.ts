@@ -21,10 +21,15 @@ interface Config<T> {
   beforeOpen?: Effect<void, any, any>[];
 }
 
-export function createRoute<T extends string, Params = ParseUrlParams<T>>(
-  config: Config<T>,
-): Route<Params> {
+type SafeParams<T> = T extends Record<string, never> ? void : T;
+
+export function createRoute<
+  T extends string,
+  Params = SafeParams<ParseUrlParams<T>>,
+>(config: Config<T>): Route<Params> {
   let asyncImport: AsyncBundleImport;
+
+  type OpenPayload = RouteOpenedPayload<Params>;
 
   const waitForAsyncBundleFx = createEffect(() => asyncImport?.());
 
@@ -34,13 +39,13 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
     }
   });
 
-  const openFx = createEffect(async (payload: RouteOpenedPayload<Params>) => {
+  const openFx = createEffect(async (payload: OpenPayload) => {
     await waitForAsyncBundleFx();
     await beforeOpenFx();
 
     if (config.parent) {
       await (config.parent as InternalRoute<any>).internal.openFx({
-        ...payload,
+        ...(payload ?? { params: {} }),
         historyIgnore: true,
       });
     }
@@ -53,12 +58,12 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
   const $isOpened = createStore(false);
   const $isPending = openFx.pending;
 
-  const open = createEvent<RouteOpenedPayload<Params>>();
+  const open = createEvent<OpenPayload>();
   const close = createEvent();
 
-  const opened = createEvent<RouteOpenedPayload<Params>>();
-  const openedOnServer = createEvent<RouteOpenedPayload<Params>>();
-  const openedOnClient = createEvent<RouteOpenedPayload<Params>>();
+  const opened = createEvent<OpenPayload>();
+  const openedOnServer = createEvent<OpenPayload>();
+  const openedOnClient = createEvent<OpenPayload>();
 
   const closed = createEvent();
 
@@ -76,6 +81,7 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
     },
   });
 
+  // @ts-expect-error TS is very stupid
   sample({
     clock: [openedOnClient, openedOnServer],
     target: opened,
@@ -112,7 +118,7 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
     internal: {
       index: false,
       close,
-      openFx,
+      openFx: openFx as Effect<any, any, any>,
       setAsyncImport: (value: AsyncBundleImport) => (asyncImport = value),
       ...config,
     },

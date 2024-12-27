@@ -9,21 +9,24 @@ export interface CreateRouteViewProps {
 }
 
 export const createRouteView = (props: CreateRouteViewProps) => {
-  return () => {
-    const { view: View, layout: Layout, route } = props;
+  return {
+    ...props,
+    view: () => {
+      const { view: View, layout: Layout, route } = props;
 
-    const { isOpened } = useUnit(route);
+      const { isOpened } = useUnit(route);
 
-    if (isOpened) {
-      return Layout ? (
-        <Layout>
+      if (isOpened) {
+        return Layout ? (
+          <Layout>
+            <View />
+          </Layout>
+        ) : (
           <View />
-        </Layout>
-      ) : (
-        <View />
-      );
-    }
+        );
+      }
 
-    return null;
+      return null;
+    },
   };
 };

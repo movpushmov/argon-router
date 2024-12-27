@@ -1,7 +1,8 @@
-import { Route } from '@argon-router/core';
+import { Route, RouteOpenedPayload } from '@argon-router/core';
 import { AnchorHTMLAttributes, ReactNode } from 'react';
 import { useRouter } from './use-router';
 import { useUnit } from 'effector-react';
+import { InternalRoute } from '@argon-router/core/lib/types';
 
 type AnchorProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'>;
 
@@ -24,8 +25,10 @@ export function Link<Params = void>(props: LinkProps<Params>) {
   const { onOpen } = useUnit(to);
 
   if (!target) {
+    const { internal } = to as InternalRoute<Params>;
+
     throw new Error(
-      '[Link] Route not found. Maybe it is not passed into createRouter?',
+      `[Link] Route with path "${internal.path}" not found. Maybe it is not passed into createRouter?`,
     );
   }
 
@@ -52,7 +55,8 @@ export function Link<Params = void>(props: LinkProps<Params>) {
         }
 
         e.preventDefault();
-        onOpen({ params: params || ({} as Params) });
+
+        onOpen({ params: params || {} } as RouteOpenedPayload<Params>);
       }}
     />
   );
