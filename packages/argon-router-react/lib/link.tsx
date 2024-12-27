@@ -11,10 +11,9 @@ type BaseLinkProps<Params> = {
   children?: ReactNode;
 } & AnchorProps;
 
-type LinkProps<Params> =
-  Params extends Record<string, never>
-    ? BaseLinkProps<Params> & { params?: Params }
-    : BaseLinkProps<Params> & { params: Params };
+type LinkProps<Params> = Params extends Record<string, never> | void | undefined
+  ? BaseLinkProps<Params> & { params?: Params }
+  : BaseLinkProps<Params> & { params: Params };
 
 export function Link<Params = void>(props: LinkProps<Params>) {
   const { to, params, onClick, ...anchorProps } = props;
