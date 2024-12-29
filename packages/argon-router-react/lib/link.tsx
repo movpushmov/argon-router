@@ -1,5 +1,5 @@
 import { Route, RouteOpenedPayload } from '@argon-router/core';
-import { AnchorHTMLAttributes, ReactNode } from 'react';
+import { AnchorHTMLAttributes, ReactNode, RefObject } from 'react';
 import { useRouter } from './use-router';
 import { useUnit } from 'effector-react';
 import { InternalRoute } from '@argon-router/core/lib/types';
@@ -9,6 +9,7 @@ type AnchorProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'>;
 type BaseLinkProps<Params> = {
   to: Route<Params>;
   children?: ReactNode;
+  ref?: RefObject<HTMLAnchorElement>;
 } & AnchorProps;
 
 type LinkProps<Params> = Params extends Record<string, never> | void | undefined
@@ -16,7 +17,7 @@ type LinkProps<Params> = Params extends Record<string, never> | void | undefined
   : BaseLinkProps<Params> & { params: Params };
 
 export function Link<Params = void>(props: LinkProps<Params>) {
-  const { to, params, onClick, ...anchorProps } = props;
+  const { to, params, onClick, ref, ...anchorProps } = props;
 
   const router = useRouter();
   const target = router.mappedRoutes.find(({ route }) => route === to);
@@ -34,6 +35,7 @@ export function Link<Params = void>(props: LinkProps<Params>) {
   return (
     <a
       {...anchorProps}
+      ref={ref}
       href={target.toPath(params ?? undefined)}
       onClick={(e) => {
         onClick?.(e);

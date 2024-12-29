@@ -43,7 +43,7 @@
     "url": "https://github.com/movpushmov/argon-router/issues"
   },
   "peerDependencies": {
-    "effector": "^23.2.2",
+    "effector": "^23.2.3",
     "patronum": "^2.2.0"
   },
   "devDependencies": {

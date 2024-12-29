@@ -47,17 +47,17 @@
     "@argon-router/core": "^0.2.1"
   },
   "devDependencies": {
-    "@babel/preset-react": "^7.24.1",
-    "@testing-library/react": "^14.2.2",
+    "@babel/preset-react": "^7.26.3",
+    "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
-    "@types/react": "^18.2.56",
-    "@vitejs/plugin-react": "^4.3.1",
-    "jsdom": "^24.1.1",
-    "react": "^18.2.0"
+    "@types/react": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^25.0.1",
+    "react": "^19.0.0"
   },
   "peerDependencies": {
-    "effector": "^23.2.2",
-    "effector-react": "^23.2.1",
-    "react": "^18.2.0"
+    "effector": "^23.2.3",
+    "effector-react": "^23.3.0",
+    "react": "^19.0.0"
   }
 }
