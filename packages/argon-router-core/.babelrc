@@ -14,8 +14,8 @@
       "effector/babel-plugin",
       {
         "factories": [
-          "lib/fields/primitive-field/field",
-          "lib/fields/array-field/field",
+          "lib/create-route",
+          "lib/create-router",
           "lib/form/form"
         ],
         "addNames": true

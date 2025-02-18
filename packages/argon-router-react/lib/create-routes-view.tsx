@@ -1,6 +1,5 @@
 import { ComponentType } from 'react';
 import { CreateRouteViewProps } from './create-route-view';
-import { useUnit } from 'effector-react';
 import { useRouter } from './use-router';
 import { Route } from '@argon-router/core';
 import { InternalRoute } from '@argon-router/core/lib/types';
@@ -14,8 +13,7 @@ export const createRoutesView = (props: CreateRoutesViewProps) => {
   const { routes, otherwise: NotFound } = props;
 
   return () => {
-    const router = useRouter();
-    const activeRoutes = useUnit(router.$activeRoutes);
+    const { activeRoutes } = useRouter();
 
     const filtered = activeRoutes.reduce<Route<any>[]>((acc, route) => {
       return acc.filter(

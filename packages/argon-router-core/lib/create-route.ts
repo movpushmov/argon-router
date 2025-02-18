@@ -43,8 +43,10 @@ export function createRoute<
     await waitForAsyncBundleFx();
     await beforeOpenFx();
 
-    if (config.parent) {
-      await (config.parent as InternalRoute<any>).internal.openFx({
+    const parent = config.parent as InternalRoute | undefined;
+
+    if (parent) {
+      await parent.internal.openFx({
         ...(payload ?? { params: {} }),
         historyIgnore: true,
       });
@@ -116,7 +118,6 @@ export function createRoute<
     openedOnServer,
 
     internal: {
-      index: false,
       close,
       openFx: openFx as Effect<any, any, any>,
       setAsyncImport: (value: AsyncBundleImport) => (asyncImport = value),

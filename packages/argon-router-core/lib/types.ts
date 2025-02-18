@@ -60,7 +60,7 @@ export type RouteOpenedPayload<T> = T extends void
   ? void | undefined | PayloadBase
   : { params: T } & PayloadBase;
 
-export interface Route<T> {
+export interface Route<T = void> {
   $params: Store<T>;
 
   $isOpened: Store<boolean>;
@@ -83,6 +83,12 @@ export interface Route<T> {
   };
 }
 
+export type NavigatePayload = {
+  path: string;
+  query: Query;
+  replace?: boolean;
+};
+
 export interface Router {
   $query: Store<Query>;
   $path: Store<string>;
@@ -90,6 +96,7 @@ export interface Router {
 
   back: EventCallable<void>;
   forward: EventCallable<void>;
+  navigate: EventCallable<NavigatePayload>;
 
   setHistory: EventCallable<History>;
 
@@ -115,13 +122,12 @@ export interface Router {
 
     onBack: EventCallable<void>;
     onForward: EventCallable<void>;
+    onNavigate: EventCallable<NavigatePayload>;
   };
 }
 
 export interface InternalRouteParams<T> {
   path: string;
-
-  index: boolean;
 
   parent?: InternalRoute<any>;
   close: EventCallable<void>;
@@ -136,6 +142,6 @@ export interface InternalRouteParams<T> {
   setAsyncImport: (value: AsyncBundleImport) => void;
 }
 
-export interface InternalRoute<T> extends Route<T> {
+export interface InternalRoute<T = any> extends Route<T> {
   internal: InternalRouteParams<T>;
 }

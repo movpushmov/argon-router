@@ -6,7 +6,7 @@ import {
   sample,
   scopeBind,
 } from 'effector';
-import { InternalRoute, Query, Route, Router } from './types';
+import { InternalRoute, NavigatePayload, Query, Route, Router } from './types';
 import { compile, match } from 'path-to-regexp';
 import { trackQueryFactory } from './track-query';
 
@@ -20,12 +20,6 @@ interface RouterConfig {
   routes: Route<any>[];
 }
 
-type NavigatePayload = {
-  path: string;
-  query: Query;
-  replace?: boolean;
-};
-
 export function createRouter(config: RouterConfig): Router {
   const { base = '/', routes } = config;
 
@@ -36,6 +30,7 @@ export function createRouter(config: RouterConfig): Router {
   const $path = createStore<string>(null as unknown as string);
 
   const setHistory = createEvent<History>();
+  const navigate = createEvent<NavigatePayload>();
 
   const back = createEvent();
   const forward = createEvent();
@@ -150,7 +145,7 @@ export function createRouter(config: RouterConfig): Router {
           replace: payload?.replace,
         };
       },
-      target: navigateFx,
+      target: navigate,
     });
 
     sample({
@@ -189,6 +184,18 @@ export function createRouter(config: RouterConfig): Router {
     ],
   });
 
+  sample({
+    clock: navigate,
+    target: navigateFx,
+  });
+
+  sample({
+    clock: [$query, $path],
+    source: { query: $query, path: $path },
+    fn: (payload) => payload,
+    target: navigate,
+  });
+
   return {
     $query,
     $path,
@@ -197,6 +204,8 @@ export function createRouter(config: RouterConfig): Router {
 
     back,
     forward,
+
+    navigate,
 
     routes,
     setHistory,
@@ -212,6 +221,7 @@ export function createRouter(config: RouterConfig): Router {
 
       onBack: back,
       onForward: forward,
+      onNavigate: navigate,
     }),
   };
 }

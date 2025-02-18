@@ -56,8 +56,8 @@
     "react": "^19.0.0"
   },
   "peerDependencies": {
-    "effector": "^23.2.3",
-    "effector-react": "^23.3.0",
-    "react": "^19.0.0"
+    "effector": ">=23",
+    "effector-react": ">=23",
+    "react": ">=19"
   }
 }

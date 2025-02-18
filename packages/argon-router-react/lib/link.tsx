@@ -1,6 +1,6 @@
 import { Route, RouteOpenedPayload } from '@argon-router/core';
 import { AnchorHTMLAttributes, ReactNode, RefObject } from 'react';
-import { useRouter } from './use-router';
+import { useRouterContext } from './use-router';
 import { useUnit } from 'effector-react';
 import { InternalRoute } from '@argon-router/core/lib/types';
 
@@ -19,8 +19,8 @@ type LinkProps<Params> = Params extends Record<string, never> | void | undefined
 export function Link<Params = void>(props: LinkProps<Params>) {
   const { to, params, onClick, ref, ...anchorProps } = props;
 
-  const router = useRouter();
-  const target = router.mappedRoutes.find(({ route }) => route === to);
+  const { mappedRoutes } = useRouterContext();
+  const target = mappedRoutes.find(({ route }) => route === to);
 
   const { onOpen } = useUnit(to);
 

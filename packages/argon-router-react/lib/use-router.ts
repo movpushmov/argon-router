@@ -1,14 +1,19 @@
 import { useContext } from 'react';
 import { RouterProviderContext } from './context';
+import { useUnit } from 'effector-react';
 
-export function useRouter() {
-  const router = useContext(RouterProviderContext);
+export function useRouterContext() {
+  const context = useContext(RouterProviderContext);
 
-  if (!router) {
+  if (!context) {
     throw new Error(
-      '[useRouter] Router not found. Insert RouterProvider in app root',
+      '[useRouter] Router not found. Add RouterProvider in app root',
     );
   }
 
-  return router;
+  return context;
+}
+
+export function useRouter() {
+  return useUnit(useRouterContext());
 }
