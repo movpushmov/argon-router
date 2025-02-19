@@ -5,22 +5,21 @@ import fs from 'fs';
 
 const { version } = JSON.parse(
   fs.readFileSync(
-    path.resolve(__dirname, '../../packages/effector-reform-core/package.json'),
+    path.resolve(__dirname, '../../packages/argon-router-core/package.json'),
     { encoding: 'utf-8' },
   ),
 );
 
 export default defineConfig({
-  title: 'effector reform',
-  description: 'effector reform documentation',
-  base: '/effector-reform',
-  head: [['link', { rel: 'icon', href: '/effector-reform/favicon.ico' }]],
+  title: 'argon router',
+  description: 'argon router documentation',
+  base: '/argon-router',
+  head: [['link', { rel: 'icon', href: '/argon-router/favicon.ico' }]],
   themeConfig: {
     logo: './logo.svg',
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Introduction', link: '/introduction/getting-started' },
-      { text: 'API', link: '/api/index' },
       {
         text: `v${version}`,
         items: [
@@ -28,11 +27,11 @@ export default defineConfig({
             items: [
               {
                 text: `v${version}`,
-                link: `https://github.com/movpushmov/effector-reform/releases/tag/v${version}`,
+                link: `https://github.com/movpushmov/argon-router/releases/tag/v${version}`,
               },
               {
                 text: 'Releases Notes',
-                link: 'https://github.com/movpushmov/effector-reform/blob/main/CHANGELOG.md',
+                link: 'https://github.com/movpushmov/argon-router/blob/main/CHANGELOG.md',
               },
             ],
           },
@@ -45,41 +44,33 @@ export default defineConfig({
         text: 'Introduction',
         items: [
           { text: 'Getting started', link: '/introduction/getting-started' },
-          {
-            text: 'Understanding concept',
-            link: '/introduction/understanding-concept',
-          },
         ],
       },
       {
         text: 'Core',
         items: [
-          { text: 'createField', link: '/core/create-field' },
-          { text: 'createArrayField', link: '/core/create-array-field' },
-          { text: 'createForm', link: '/core/create-form' },
+          { text: 'createRoute', link: '/core/create-route' },
+          { text: 'createRouter', link: '/core/create-router' },
+          { text: 'trackQuery', link: '/core/track-query' },
         ],
       },
       {
         text: 'React',
         items: [
-          { text: 'useForm', link: '/react/use-form' },
-          { text: 'useField', link: '/react/use-field' },
-          { text: 'useArrayField', link: '/react/use-array-field' },
-        ],
-      },
-      {
-        text: 'Validation',
-        items: [
-          { text: 'Contracts', link: '/validation/contracts' },
-          { text: 'Yup', link: '/validation/yup' },
-          { text: 'Zod', link: '/validation/zod' },
+          { text: 'createRouteView', link: '/react/create-route-view' },
+          {
+            text: 'createLazyRouteView',
+            link: '/react/create-lazy-route-view',
+          },
+          { text: 'createRoutesView', link: '/react/create-routes-view' },
+          { text: 'useRouter', link: '/react/use-router' },
         ],
       },
     ],
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2021-PRESENT movpushmov',
+      copyright: 'Copyright © 2025-PRESENT movpushmov',
     },
 
     socialLinks: [
@@ -89,7 +80,7 @@ export default defineConfig({
         },
         link: 'https://t.me/effector_ru',
       },
-      { icon: 'github', link: 'https://github.com/movpushmov/effector-reform' },
+      { icon: 'github', link: 'https://github.com/movpushmov/argon-router' },
     ],
   },
 });

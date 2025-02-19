@@ -3,8 +3,8 @@
 layout: home
 
 hero:
-  name: "argon router"
-  text: "make & use router without a headache"
+  name: 'argon router'
+  text: 'make & use router without a headache'
   tagline: with power of effector
   image:
     src: ./logo.svg
@@ -12,9 +12,6 @@ hero:
     - theme: brand
       text: Get Started
       link: /introduction/getting-started.md
-    - theme: alt
-      text: API examples
-      link: /core/create-form
     - theme: alt
       text: View on GitHub
       link: https://github.com/movpushmov/argon-router
@@ -31,6 +28,5 @@ features:
     details: Live without path-based routing
   - title: SSR compatible
     icon: 🗄️️
-    details: Prepare forms state on server and use it on a client
+    details: Prepare router on server and use it on a client
 ---
-

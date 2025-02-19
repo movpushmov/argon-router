@@ -7,67 +7,140 @@ title: Getting started
 ## Installation
 
 ::: warning
-effector-reform is not production ready yet and still
-may have bugs and unstable API. If you found bug —
-please report it on GitHub.
+argon-router is extermely unstable & maybe buggy. DO NOT USE IN PRODUCTION!
 :::
 
 ::: code-group
+
 ```bash [npm]
-npm install @effector-reform/core
+npm install @argon-router/core
 ```
+
 ```bash [yarn]
-yarn add @effector-reform/core
+yarn add @argon-router/core
 ```
+
 ```bash [pnpm]
-pnpm add @effector-reform/core
+pnpm add @argon-router/core
 ```
+
 :::
 
 ::: tip
-In SSR project you must add @effector-reform/core in "factories"
+In SSR project you must add @argon-router/core in "factories"
 list in [effector babel plugin](https://effector.dev/en/api/effector/babel-plugin/#configuration-factories)
 :::
 
 ## React bindings
 
 ::: code-group
+
 ```bash [npm]
-npm install @effector-reform/react
+npm install @argon-router/react
 ```
+
 ```bash [yarn]
-yarn add @effector-reform/react
+yarn add @argon-router/react
 ```
+
 ```bash [pnpm]
-pnpm add @effector-reform/react
+pnpm add @argon-router/react
 ```
+
 :::
 
-## Writing first form
+## Writing first router
 
-As an example, we will write a simple form with `name` and `age` fields.
+As an example, we will write a simple router with `feed` and `profile` routes.
 
 ```ts
-import { createForm } from "@effector-reform/core";
-import { allSettled, createEvent, fork, sample } from "effector";
+import { createRoute, createRouter } from '@argon-router/core';
+import { fork } from 'effector';
 
 const scope = fork();
 
-const form = createForm({
-  schema: {
-    name: '',
-    age: 0
-  },
+const routes = {
+  feed: createRoute({ path: '/' }),
+  profile: createRoute({ path: '/profile' }),
+};
+
+const router = createRouter({
+  routes: [routes.feed, routes.profile],
 });
-
-const nameChanged = createEvent<string>();
-
-sample({
-  clock: nameChanged,
-  target: form.fields.name.change,
-});
-
-await allSettled(nameChanged, { scope, params: 'Edward' });
-
-console.log(scope.getState(form.fields.name.$value)); // Edward
 ```
+
+```tsx
+// profile.tsx
+import { createRouteView } from '@argon-router/react';
+
+const Profile = () => {
+  return <>...</>;
+};
+
+export const ProfileScreen = createRouteView({
+  route: routes.profile,
+  view: Profile,
+});
+```
+
+```tsx
+// feed.tsx
+import { createRouteView } from '@argon-router/react';
+
+const Feed = () => {
+  return <>...</>;
+};
+
+export const FeedScreen = createRouteView({ route: routes.feed, view: Feed });
+```
+
+```tsx
+// app.tsx
+import { createRoutesView } from '@argon-router/react';
+import { FeedScreen, ProfileScreen } from './screens';
+import { router } from './shared/routing';
+
+const RoutesView = createRoutesView({ routes: [FeedScreen, ProfileScreen] });
+
+export function App() {
+  return (
+    <RouterProvider router={router}>
+      <RoutesView />
+    </RouterProvider>
+  );
+}
+```
+
+::: warning
+
+router need to be initialzed with `setHistory` event, which requires memory or browser history from `history` package.
+
+```ts
+import { createRoot } from 'react-dom/client';
+import { allSettled, fork } from 'effector';
+import { createBrowserHistory } from 'history';
+import { Provider } from 'effector-react';
+import { router } from './shared/routing';
+import { App } from './app';
+
+const root = createRoot(document.getElementById('root')!);
+
+async function render() {
+  const scope = fork();
+
+  await allSettled(router.setHistory, {
+    scope,
+    params: createBrowserHistory(),
+  });
+
+  root.render(
+    <Provider value={scope}>
+      <App />
+    </Provider>,
+  );
+}
+
+render();
+```
+
+:::
