@@ -1,5 +1,6 @@
-import { createEvent, sample, Store } from 'effector';
+import { createEvent, createStore, Effect, sample, Store } from 'effector';
 import {
+  NavigatePayload,
   Query,
   QueryTracker,
   QueryTrackerConfig,
@@ -9,17 +10,14 @@ import {
 } from './types';
 import { parameters } from './const';
 
-function isNeededRoutesActive(
-  forRoutes: Route<any>[],
-  activeRoutes: Route<any>[],
-) {
+function isForRouteActive(forRoutes: Route<any>[], activeRoutes: Route<any>[]) {
   for (const route of forRoutes) {
-    if (!activeRoutes.includes(route)) {
-      return false;
+    if (activeRoutes.includes(route)) {
+      return true;
     }
   }
 
-  return true;
+  return false;
 }
 
 function isHaveValidParams(query: Query, neededParameters: RawConfig) {
@@ -95,6 +93,16 @@ function isHaveValidParams(query: Query, neededParameters: RawConfig) {
         }
         break;
       }
+      case parameters.boolean: {
+        if (
+          !query[key] ||
+          Array.isArray(query[key]) ||
+          !['0', '1', 'false', 'true'].includes(query[key] as string)
+        ) {
+          return false;
+        }
+        break;
+      }
     }
   }
 
@@ -110,18 +118,18 @@ function transformParams(
   for (const key in neededParameters) {
     const parameterType = neededParameters[key];
 
-    const data = query[key];
+    const data = query[key] as string;
 
     if (Array.isArray(parameterType)) {
+      const arrayData = query[key] as string[];
+
       // @ts-expect-error dummy ts
-      result[key] = data === '1' || data === 'true';
+      result[key] = arrayData;
       continue;
     }
 
     switch (typeof parameterType) {
       case 'number': {
-        const data = query[key] as string;
-
         // @ts-expect-error dummy ts
         result[key] = isNaN(parseInt(data)) ? parseFloat(data) : parseInt(data);
 
@@ -135,13 +143,11 @@ function transformParams(
       }
       case 'string': {
         // @ts-expect-error dummy ts
-        result[key] = query[key];
+        result[key] = data;
       }
       case 'boolean': {
-        const data = query[key] as string;
-
         // @ts-expect-error dummy ts
-        result[key] = data === '0' ? parseFloat(data) : parseInt(data);
+        result[key] = data === '1' || data === 'true';
 
         break;
       }
@@ -164,62 +170,100 @@ function transformParams(
 
         break;
       }
+      case parameters.boolean: {
+        const data = query[key] as string;
+
+        // @ts-expect-error dummy ts
+        result[key] = data === '1' || data === 'true';
+
+        break;
+      }
     }
   }
 
   return result;
 }
 
-export function trackQueryFactory(
-  $activeRoutes: Store<Route<any>[]>,
-  $query: Store<Query>,
-) {
+type FactoryPayload = {
+  $activeRoutes: Store<Route<any>[]>;
+  $query: Store<Query>;
+  $path: Store<string>;
+  navigateFx: Effect<NavigatePayload, void>;
+};
+
+export function trackQueryFactory({
+  $activeRoutes,
+  $path,
+  $query,
+  navigateFx,
+}: FactoryPayload) {
   return <T extends RawConfig>(
     config: QueryTrackerConfig<T>,
   ): QueryTracker<T> => {
     const { parameters, forRoutes } = config;
+
+    const $entered = createStore(false);
 
     const entered = createEvent<ReadyConfig<T>>();
     const exited = createEvent();
 
     const exit = createEvent<{ ignoreParams: string[] } | void>();
 
+    const changeEntered = createEvent<boolean>();
+
     sample({
-      source: { activeRoutes: $activeRoutes, query: $query },
-      filter: ({ activeRoutes, query }) =>
-        (!forRoutes || isNeededRoutesActive(forRoutes, activeRoutes)) &&
-        isHaveValidParams(query, parameters),
-      fn: ({ query }) => transformParams(query, parameters),
+      clock: changeEntered,
+      target: $entered,
     });
 
     sample({
       source: { activeRoutes: $activeRoutes, query: $query },
       filter: ({ activeRoutes, query }) =>
+        (!forRoutes || isForRouteActive(forRoutes, activeRoutes)) &&
+        isHaveValidParams(query, parameters),
+      fn: ({ query }) => transformParams(query, parameters) as ReadyConfig<T>,
+      target: [entered, changeEntered.prepend(() => true)],
+    });
+
+    sample({
+      source: { activeRoutes: $activeRoutes, query: $query, entered: $entered },
+      filter: ({ activeRoutes, query, entered }) =>
+        entered &&
         !(
-          (!forRoutes || isNeededRoutesActive(forRoutes, activeRoutes)) &&
+          (!forRoutes || isForRouteActive(forRoutes, activeRoutes)) &&
           isHaveValidParams(query, parameters)
         ),
-      target: exited,
+      target: [
+        exited.prepend(() => undefined),
+        changeEntered.prepend(() => false),
+      ],
+    });
+
+    sample({
+      clock: exit,
+      source: { path: $path, query: $query },
+      fn: ({ path, query }, payload) => {
+        if (payload && payload.ignoreParams) {
+          const copy: Query = {};
+
+          for (const key of payload.ignoreParams) {
+            if (query[key]) {
+              copy[key] = query[key];
+            }
+          }
+
+          return { query: copy, path };
+        }
+
+        return { query: {}, path };
+      },
+      target: navigateFx,
     });
 
     return {
       entered,
       exited,
       exit,
-      getPayload: (config: ReadyConfig<T>) => {
-        return Object.entries(config).reduce<Record<string, any>>(
-          (acc, [key, value]) => {
-            if (typeof parameters[key] === 'symbol') {
-              acc[key] = value;
-            } else {
-              acc[key] = parameters[key];
-            }
-
-            return acc;
-          },
-          {},
-        );
-      },
     };
   };
 }

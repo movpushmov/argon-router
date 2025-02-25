@@ -19,10 +19,7 @@ describe('router', () => {
 
     history.push('/one');
 
-    await vi.waitFor(
-      () => expect(scope.getState(router.$activeRoutes)[0]).toEqual(route1),
-      { timeout: 100 },
-    );
+    await allSettled(scope);
 
     expect(scope.getState(router.$activeRoutes)[0]).toEqual(route1);
     expect(scope.getState(route1.$isOpened)).toBeTruthy();
@@ -43,20 +40,14 @@ describe('router', () => {
 
     history.push('/one');
 
-    await vi.waitFor(
-      () => expect(scope.getState(router.$activeRoutes)[0]).toEqual(route1),
-      { timeout: 100 },
-    );
+    await allSettled(scope);
 
-    expect(scope.getState(router.$activeRoutes)).toStrictEqual([route1]);
+    expect(scope.getState(router.$activeRoutes)[0]).toEqual(route1);
     expect(scope.getState(route1.$isOpened)).toBeTruthy();
 
     history.push('/two');
 
-    await vi.waitFor(
-      () => expect(scope.getState(router.$activeRoutes)[0]).toEqual(route2),
-      { timeout: 100 },
-    );
+    await allSettled(scope);
 
     expect(scope.getState(router.$activeRoutes)[0]).toEqual(route2);
     expect(scope.getState(route2.$isOpened)).toBeTruthy();
@@ -119,7 +110,7 @@ describe('router', () => {
     });
   });
 
-  test.only('route.open with query', async () => {
+  test('route.open with query', async () => {
     const scope = fork();
     const route = createRoute({ path: '/auth' });
     const router = createRouter({

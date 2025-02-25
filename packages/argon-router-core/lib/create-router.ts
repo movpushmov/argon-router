@@ -1,15 +1,7 @@
-import {
-  attach,
-  createEffect,
-  createEvent,
-  createStore,
-  sample,
-  scopeBind,
-} from 'effector';
+import { attach, createEvent, createStore, sample, scopeBind } from 'effector';
 import { InternalRoute, NavigatePayload, Query, Route, Router } from './types';
 import { compile, match } from 'path-to-regexp';
 import { trackQueryFactory } from './track-query';
-import isEqual from 'fast-deep-equal';
 
 import type { History } from 'history';
 import { spread } from 'patronum';
@@ -21,11 +13,15 @@ interface RouterConfig {
   routes: Route<any>[];
 }
 
+type LocationState = { skipUpdate?: boolean };
+type Meta = { skipUpdate: boolean };
+
 export function createRouter(config: RouterConfig): Router {
   const { base = '/', routes } = config;
 
+  const $meta = createStore<Meta>({ skipUpdate: false });
+
   const $history = createStore<History | null>(null, { serialize: 'ignore' });
-  const $activeRoutes = createStore<Route<any>[]>([], { serialize: 'ignore' });
 
   const $query = createStore<Query>({});
   const $path = createStore<string>(null as unknown as string);
@@ -39,6 +35,7 @@ export function createRouter(config: RouterConfig): Router {
   const locationUpdated = createEvent<{
     pathname: string;
     query: Query;
+    state: LocationState;
   }>();
 
   const mappedRoutes = routes.map((route) => {
@@ -65,11 +62,32 @@ export function createRouter(config: RouterConfig): Router {
     };
   });
 
+  const $activeRoutes = $path.map((path) => {
+    const result: Route<any>[] = [];
+
+    for (const { route, fromPath } of mappedRoutes) {
+      if (fromPath(path)) {
+        result.push(route);
+      }
+    }
+
+    return result;
+  });
+
   const navigateFx = attach({
-    source: { history: $history },
-    effect: async ({ history }, { path, query, replace }: NavigatePayload) => {
+    source: { history: $history, meta: $meta },
+    effect: async (
+      { history, meta },
+      { path, query, replace }: NavigatePayload,
+    ) => {
       if (!history) {
         throw new Error('history not found');
+      }
+
+      if (meta.skipUpdate) {
+        meta.skipUpdate = false;
+
+        return;
       }
 
       const payload = {
@@ -80,29 +98,40 @@ export function createRouter(config: RouterConfig): Router {
       if (replace) {
         history.replace(payload);
       } else {
-        history.push(payload);
+        history.push(payload, { skipUpdate: true } satisfies LocationState);
       }
     },
   });
 
-  const subscribeHistoryFx = createEffect((history: History) => {
-    const historyLocationUpdated = scopeBind(locationUpdated);
+  const subscribeHistoryFx = attach({
+    source: $meta,
+    effect: (meta, history: History) => {
+      const historyLocationUpdated = scopeBind(locationUpdated);
 
-    historyLocationUpdated({
-      pathname: history.location.pathname,
-      query: { ...queryString.parse(history.location.search) },
-    });
-
-    if (!history) {
-      throw new Error();
-    }
-
-    history.listen(({ location }) => {
       historyLocationUpdated({
-        pathname: location.pathname,
-        query: { ...queryString.parse(location.search) },
+        pathname: history.location.pathname,
+        query: { ...queryString.parse(history.location.search) },
+        state: (history.location.state ?? {}) as LocationState,
       });
-    });
+
+      if (!history) {
+        throw new Error();
+      }
+
+      history.listen(({ location }) => {
+        const state = (location.state ?? {}) as LocationState;
+
+        if (state.skipUpdate) {
+          meta.skipUpdate = true;
+        }
+
+        historyLocationUpdated({
+          pathname: location.pathname,
+          query: { ...queryString.parse(location.search) },
+          state,
+        });
+      });
+    },
   });
 
   const openRoutesByPathFx = attach({
@@ -128,14 +157,6 @@ export function createRouter(config: RouterConfig): Router {
   for (const { route, toPath } of mappedRoutes) {
     sample({
       clock: route.opened,
-      source: $activeRoutes,
-      filter: (routes) => !routes.includes(route),
-      fn: (routes) => [...routes, route],
-      target: $activeRoutes,
-    });
-
-    sample({
-      clock: route.opened,
       filter: (payload: any) => !payload?.historyIgnore,
       fn: (payload): NavigatePayload => {
         return {
@@ -147,13 +168,6 @@ export function createRouter(config: RouterConfig): Router {
         };
       },
       target: navigate,
-    });
-
-    sample({
-      clock: route.closed,
-      source: $activeRoutes,
-      fn: (routes) => routes.filter((r) => r !== route),
-      target: $activeRoutes,
     });
   }
 
@@ -170,22 +184,25 @@ export function createRouter(config: RouterConfig): Router {
 
   sample({
     clock: locationUpdated,
-    source: { query: $query, path: $path },
-    filter: ({ query, path }, location) =>
-      path !== location.pathname || !isEqual(query, location.query),
-    fn: (_, location) => ({
+    fn: (location) => ({
       path: location.pathname,
       query: location.query,
     }),
-    target: [
-      spread({
-        targets: {
-          path: $path,
-          query: $query,
-        },
-      }),
-      openRoutesByPathFx,
-    ],
+    target: spread({
+      targets: {
+        path: $path,
+        query: $query,
+      },
+    }),
+  });
+
+  sample({
+    clock: locationUpdated,
+    fn: (location) => ({
+      path: location.pathname,
+      query: location.query,
+    }),
+    target: openRoutesByPathFx,
   });
 
   sample({
@@ -216,7 +233,7 @@ export function createRouter(config: RouterConfig): Router {
 
     mappedRoutes,
 
-    trackQuery: trackQueryFactory($activeRoutes, $query),
+    trackQuery: trackQueryFactory({ $activeRoutes, $path, $query, navigateFx }),
 
     '@@unitShape': () => ({
       query: $query,

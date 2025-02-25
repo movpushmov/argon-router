@@ -2,6 +2,7 @@ import { Effect, Event, EventCallable, Store } from 'effector';
 import {
   AnyParameter,
   ArrayParameter,
+  BooleanParameter,
   NumberParameter,
   StringParameter,
 } from './const';
@@ -17,6 +18,7 @@ export type RawConfig = Record<
   | ArrayParameter
   | NumberParameter
   | StringParameter
+  | BooleanParameter
   | SupportedPrimitive
   | SupportedPrimitive[]
 >;
@@ -47,8 +49,6 @@ export interface QueryTracker<ParametersConfig extends RawConfig> {
   exited: Event<void>;
 
   exit: EventCallable<{ ignoreParams: string[] } | void>;
-
-  getPayload: (config: ReadyConfig<ParametersConfig>) => Record<string, any>;
 }
 
 type PayloadBase = {

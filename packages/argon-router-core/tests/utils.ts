@@ -1,13 +1,13 @@
-import { createEffect, sample, Unit } from 'effector';
+import { createWatch, Scope, Unit } from 'effector';
 import { vi } from 'vitest';
 
-export function watchCalls(unit: Unit<any>) {
-  const mockedFn = vi.fn();
-  const fx = createEffect(mockedFn);
+export function watchCalls<T>(unit: Unit<T>, scope: Scope) {
+  const mockedFn = vi.fn<(payload: T) => void>();
 
-  sample({
-    clock: unit,
-    target: fx,
+  createWatch({
+    unit,
+    scope,
+    fn: mockedFn,
   });
 
   return mockedFn;
