@@ -3,6 +3,8 @@
 Tracking query is very popular case. Argon router gives you instrument with name
 `query tracker`, which allows you to watch query & controls it without headache.
 
+Allowed `parameters` types: `number`, `string`, `boolean`, `array`, `string literal`, `any`
+
 ### Basic example (persistent dialog)
 
 ```ts
