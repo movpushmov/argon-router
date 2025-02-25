@@ -1,32 +1,18 @@
-import { Route } from '@argon-router/core';
-import { useUnit } from 'effector-react';
-import { ComponentType, ReactNode } from 'react';
+import { CreateRouteViewProps, RouteView } from './types';
 
-export interface CreateRouteViewProps {
-  route: Route<any>;
-  view: ComponentType;
-  layout?: ComponentType<{ children?: ReactNode }>;
-}
-
-export const createRouteView = (props: CreateRouteViewProps) => {
+export const createRouteView = (props: CreateRouteViewProps): RouteView => {
   return {
-    ...props,
+    route: props.route,
     view: () => {
-      const { view: View, layout: Layout, route } = props;
+      const { view: View, layout: Layout } = props;
 
-      const { isOpened } = useUnit(route);
-
-      if (isOpened) {
-        return Layout ? (
-          <Layout>
-            <View />
-          </Layout>
-        ) : (
+      return Layout ? (
+        <Layout>
           <View />
-        );
-      }
-
-      return null;
+        </Layout>
+      ) : (
+        <View />
+      );
     },
   };
 };

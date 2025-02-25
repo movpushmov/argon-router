@@ -1,43 +1,29 @@
-import { Route } from '@argon-router/core';
+import { lazy, Suspense } from 'react';
+import { CreateLazyRouteViewProps, RouteView } from './types';
 import { InternalRoute } from '@argon-router/core/lib/types';
-import { useUnit } from 'effector-react';
-import { ComponentType, lazy, ReactNode, Suspense } from 'react';
 
-type LazyComponent = () => Promise<{ default: ComponentType }>;
-
-export interface CreateRouteViewProps {
-  route: Route<any>;
-  view: LazyComponent;
-  fallback?: ComponentType;
-  layout?: ComponentType<{ children?: ReactNode }>;
-}
-
-export const createLazyRouteView = (props: CreateRouteViewProps) => {
+export const createLazyRouteView = (
+  props: CreateLazyRouteViewProps,
+): RouteView => {
   (props.route as InternalRoute<any>).internal.setAsyncImport(props.view);
   const View = lazy(props.view);
 
   return {
-    ...props,
+    route: props.route,
     view: () => {
-      const { layout: Layout, fallback: Fallback = () => <></>, route } = props;
+      const { layout: Layout, fallback: Fallback = () => <></> } = props;
 
-      const { isOpened } = useUnit(route);
-
-      if (isOpened) {
-        return Layout ? (
-          <Layout>
-            <Suspense fallback={<Fallback />}>
-              <View />
-            </Suspense>
-          </Layout>
-        ) : (
+      return Layout ? (
+        <Layout>
           <Suspense fallback={<Fallback />}>
             <View />
           </Suspense>
-        );
-      }
-
-      return null;
+        </Layout>
+      ) : (
+        <Suspense fallback={<Fallback />}>
+          <View />
+        </Suspense>
+      );
     },
   };
 };

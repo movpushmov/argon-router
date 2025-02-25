@@ -1,11 +1,11 @@
-import { ComponentType } from 'react';
-import { CreateRouteViewProps } from './create-route-view';
+import { ComponentType, createElement } from 'react';
 import { useRouter } from './use-router';
 import { Route } from '@argon-router/core';
 import { InternalRoute } from '@argon-router/core/lib/types';
+import { RouteView } from './types';
 
 interface CreateRoutesViewProps {
-  routes: CreateRouteViewProps[];
+  routes: RouteView[];
   otherwise?: ComponentType;
 }
 
@@ -29,14 +29,6 @@ export const createRoutesView = (props: CreateRoutesViewProps) => {
       return NotFound ? <NotFound /> : null;
     }
 
-    const { view: View, layout: Layout } = displayedRoute;
-
-    return Layout ? (
-      <Layout>
-        <View />
-      </Layout>
-    ) : (
-      <View />
-    );
+    return createElement(displayedRoute.view);
   };
 };

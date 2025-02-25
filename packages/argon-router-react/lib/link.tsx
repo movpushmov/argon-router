@@ -1,24 +1,9 @@
-import { Route, RouteOpenedPayload } from '@argon-router/core';
-import {
-  AnchorHTMLAttributes,
-  ForwardedRef,
-  forwardRef,
-  ReactNode,
-} from 'react';
+import { RouteOpenedPayload } from '@argon-router/core';
+import { ForwardedRef, forwardRef, ReactNode } from 'react';
 import { useRouterContext } from './use-router';
 import { useUnit } from 'effector-react';
 import { InternalRoute } from '@argon-router/core/lib/types';
-
-type AnchorProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'>;
-
-type BaseLinkProps<Params> = {
-  to: Route<Params>;
-  children?: ReactNode;
-} & AnchorProps;
-
-type LinkProps<Params> = Params extends Record<string, never> | void | undefined
-  ? BaseLinkProps<Params> & { params?: Params }
-  : BaseLinkProps<Params> & { params: Params };
+import { LinkProps } from './types';
 
 type ForwardedLink = <Params = void>(
   props: LinkProps<Params> & { ref?: ForwardedRef<HTMLAnchorElement> },
