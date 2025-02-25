@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.3](https://github.com/movpushmov/argon-router/compare/v0.3.2...v0.3.3) (2025-02-25)
+
+### Bug Fixes
+
+- lazy route export ([4a37ce2](https://github.com/movpushmov/argon-router/commit/4a37ce28c4de8f3c8e0c5c9b3541196c8e165135))
+
 ## [0.3.2](https://github.com/movpushmov/argon-router/compare/v0.3.1...v0.3.2) (2025-02-25)
 
 ### Bug Fixes
