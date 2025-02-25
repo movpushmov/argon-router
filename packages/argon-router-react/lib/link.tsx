@@ -1,5 +1,10 @@
 import { Route, RouteOpenedPayload } from '@argon-router/core';
-import { AnchorHTMLAttributes, ReactNode, RefObject } from 'react';
+import {
+  AnchorHTMLAttributes,
+  ForwardedRef,
+  forwardRef,
+  ReactNode,
+} from 'react';
 import { useRouterContext } from './use-router';
 import { useUnit } from 'effector-react';
 import { InternalRoute } from '@argon-router/core/lib/types';
@@ -9,15 +14,21 @@ type AnchorProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'>;
 type BaseLinkProps<Params> = {
   to: Route<Params>;
   children?: ReactNode;
-  ref?: RefObject<HTMLAnchorElement>;
 } & AnchorProps;
 
 type LinkProps<Params> = Params extends Record<string, never> | void | undefined
   ? BaseLinkProps<Params> & { params?: Params }
   : BaseLinkProps<Params> & { params: Params };
 
-export function Link<Params = void>(props: LinkProps<Params>) {
-  const { to, params, onClick, ref, ...anchorProps } = props;
+type ForwardedLink = <Params = void>(
+  props: LinkProps<Params> & { ref?: ForwardedRef<HTMLAnchorElement> },
+) => ReactNode;
+
+export const Link: ForwardedLink = forwardRef<
+  HTMLAnchorElement,
+  LinkProps<any>
+>((props, ref) => {
+  const { to, params, onClick, ...anchorProps } = props;
 
   const { mappedRoutes } = useRouterContext();
   const target = mappedRoutes.find(({ route }) => route === to);
@@ -25,7 +36,7 @@ export function Link<Params = void>(props: LinkProps<Params>) {
   const { onOpen } = useUnit(to);
 
   if (!target) {
-    const { internal } = to as InternalRoute<Params>;
+    const { internal } = to as InternalRoute<any>;
 
     throw new Error(
       `[Link] Route with path "${internal.path}" not found. Maybe it is not passed into createRouter?`,
@@ -57,8 +68,8 @@ export function Link<Params = void>(props: LinkProps<Params>) {
 
         e.preventDefault();
 
-        onOpen({ params: params || {} } as RouteOpenedPayload<Params>);
+        onOpen({ params: params || {} } as RouteOpenedPayload<any>);
       }}
     />
   );
-}
+});

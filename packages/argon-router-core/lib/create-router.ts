@@ -9,6 +9,7 @@ import {
 import { InternalRoute, NavigatePayload, Query, Route, Router } from './types';
 import { compile, match } from 'path-to-regexp';
 import { trackQueryFactory } from './track-query';
+import isEqual from 'fast-deep-equal';
 
 import type { History } from 'history';
 import { spread } from 'patronum';
@@ -89,7 +90,7 @@ export function createRouter(config: RouterConfig): Router {
 
     historyLocationUpdated({
       pathname: history.location.pathname,
-      query: queryString.parse(history.location.search),
+      query: { ...queryString.parse(history.location.search) },
     });
 
     if (!history) {
@@ -99,7 +100,7 @@ export function createRouter(config: RouterConfig): Router {
     history.listen(({ location }) => {
       historyLocationUpdated({
         pathname: location.pathname,
-        query: queryString.parse(location.search),
+        query: { ...queryString.parse(location.search) },
       });
     });
   });
@@ -169,9 +170,12 @@ export function createRouter(config: RouterConfig): Router {
 
   sample({
     clock: locationUpdated,
-    fn: (location) => ({
+    source: { query: $query, path: $path },
+    filter: ({ query, path }, location) =>
+      path !== location.pathname || !isEqual(query, location.query),
+    fn: (_, location) => ({
       path: location.pathname,
-      query: location.query ?? {},
+      query: location.query,
     }),
     target: [
       spread({

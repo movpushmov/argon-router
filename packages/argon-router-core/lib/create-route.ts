@@ -39,21 +39,23 @@ export function createRoute<
     }
   });
 
-  const openFx = createEffect(async (payload: OpenPayload) => {
-    await waitForAsyncBundleFx();
-    await beforeOpenFx();
+  const openFx = createEffect<OpenPayload, RouteOpenedPayload<Params>>(
+    async (payload: OpenPayload) => {
+      await waitForAsyncBundleFx();
+      await beforeOpenFx();
 
-    const parent = config.parent as InternalRoute | undefined;
+      const parent = config.parent as InternalRoute | undefined;
 
-    if (parent) {
-      await parent.internal.openFx({
-        ...(payload ?? { params: {} }),
-        historyIgnore: true,
-      });
-    }
+      if (parent) {
+        await parent.internal.openFx({
+          ...(payload ?? { params: {} }),
+          historyIgnore: true,
+        });
+      }
 
-    return payload;
-  });
+      return payload;
+    },
+  );
 
   const $params = createStore<Params>({} as Params);
 
@@ -72,6 +74,20 @@ export function createRoute<
   sample({
     clock: open,
     target: openFx,
+  });
+
+  const defaultParams = {} as Params;
+
+  sample({
+    clock: openFx.doneData,
+    fn: (payload): Params => {
+      if (!payload) {
+        return defaultParams;
+      }
+
+      return 'params' in payload ? { ...payload.params } : defaultParams;
+    },
+    target: $params,
   });
 
   split({
