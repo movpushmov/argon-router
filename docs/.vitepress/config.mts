@@ -52,6 +52,7 @@ export default defineConfig({
           { text: 'createRoute', link: '/core/create-route' },
           { text: 'createRouter', link: '/core/create-router' },
           { text: 'trackQuery', link: '/core/track-query' },
+          { text: 'chainRoute', link: '/core/chain-route' },
         ],
       },
       {

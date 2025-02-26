@@ -87,15 +87,9 @@ export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
   const { route, beforeOpen, openOn, cancelOn } = props;
 
   const openFx = createEffect(async (payload: RouteOpenedPayload<T>) => {
-    if (Array.isArray(beforeOpen)) {
-      for (const trigger of beforeOpen) {
-        await trigger(payload);
-      }
-
-      return;
+    for (const trigger of (<BeforeOpenUnit<T>[]>[]).concat(beforeOpen)) {
+      await trigger(payload);
     }
-
-    await beforeOpen(payload);
   });
 
   const virtualRoute = createVirtualRoute<T>(openFx.pending);
@@ -111,7 +105,7 @@ export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
       (payload && 'params' in payload ? payload.params : null) as T,
     target: virtualRoute.$params,
   });
-  
+
   if (openOn) {
     // @ts-expect-error ...
     sample({
@@ -124,9 +118,7 @@ export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
 
   if (cancelOn) {
     sample({
-      clock: Array.isArray(cancelOn)
-        ? [route.closed, ...cancelOn]
-        : [route.closed, cancelOn],
+      clock: (<Unit<void>[]>[route.closed]).concat(cancelOn),
       target: virtualRoute.close,
     });
   }
