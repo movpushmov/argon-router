@@ -1,4 +1,4 @@
-import { Effect, Event, EventCallable, Store } from 'effector';
+import { Effect, Event, EventCallable, Store, StoreWritable } from 'effector';
 import {
   AnyParameter,
   ArrayParameter,
@@ -144,4 +144,9 @@ export interface InternalRouteParams<T> {
 
 export interface InternalRoute<T = any> extends Route<T> {
   internal: InternalRouteParams<T>;
+}
+
+export interface VirtualRoute<T = any> extends Route<T> {
+  $params: StoreWritable<T>;
+  close: EventCallable<void>;
 }
