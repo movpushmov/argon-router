@@ -7,7 +7,8 @@ Create virtual route which opened on `openOn`, closed on `cancelOn` and run's `b
 ### Basic example
 
 ```ts
-import { chainRoute } from '@argon-router/core';
+import { createRoute, chainRoute } from '@argon-router/core';
+import { createEvent, createEffect } from 'effector';
 
 const route = createRoute({ path: '/profile' });
 
@@ -37,7 +38,7 @@ const virtual = chainRoute({
 ### Chain already chained routes
 
 ```ts
-import { createRoute } from '@argon-router/core';
+import { createRoute, chainRoute } from '@argon-router/core';
 
 const postRoute = createRoute({ path: '/post/:id' });
 
