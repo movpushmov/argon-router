@@ -41,6 +41,6 @@ import { createRoute } from '@argon-router/core';
 
 const postRoute = createRoute({ path: '/post/:id' });
 
-const authorizedRoute = chain({ route: postRoute, /* ... */ });
-const postLoadedRoute = chain({ route: authorizedRoute, /* ... */ });
+const authorizedRoute = chainRoute({ route: postRoute, /* ... */ });
+const postLoadedRoute = chainRoute({ route: authorizedRoute, /* ... */ });
 ```
