@@ -50,19 +50,19 @@ render();
 ### Writing in query or path
 
 in some cases you need to write custom query parameters or path, you can
-make this easily with `$query` and `$path` stores:
+make this easily with `navigate` event:
 
 ```ts
 sample({
   clock: goToPage,
-  fn: () => '/page',
-  target: router.$path,
+  fn: () => ({ path: '/page' }),
+  target: router.navigate,
 });
 
 sample({
   clock: addQuery,
-  fn: () => ({ param1: 'hello', params2: [1, 2] }),
-  target: router.$query,
+  fn: () => ({ query: { param1: 'hello', params2: [1, 2] } }),
+  target: router.navigate,
 });
 ```
 

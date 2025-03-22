@@ -95,7 +95,7 @@ export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
   const virtualRoute = createVirtualRoute<T>(openFx.pending);
 
   sample({
-    clock: route.opened,
+    clock: route.open,
     target: openFx,
   });
 

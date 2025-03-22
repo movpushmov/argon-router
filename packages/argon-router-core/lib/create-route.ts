@@ -49,7 +49,7 @@ export function createRoute<
       if (parent) {
         await parent.internal.openFx({
           ...(payload ?? { params: {} }),
-          historyIgnore: true,
+          navigate: false,
         });
       }
 
@@ -69,6 +69,8 @@ export function createRoute<
   const openedOnServer = createEvent<OpenPayload>();
   const openedOnClient = createEvent<OpenPayload>();
 
+  const navigated = createEvent<OpenPayload>();
+
   const closed = createEvent();
 
   sample({
@@ -79,7 +81,7 @@ export function createRoute<
   const defaultParams = {} as Params;
 
   sample({
-    clock: openFx.doneData,
+    clock: navigated,
     fn: (payload): Params => {
       if (!payload) {
         return defaultParams;
@@ -91,7 +93,7 @@ export function createRoute<
   });
 
   split({
-    source: openFx.doneData,
+    source: navigated,
     match: () => (typeof window === 'undefined' ? 'server' : 'client'),
     cases: {
       server: openedOnServer,
@@ -106,19 +108,12 @@ export function createRoute<
   });
 
   sample({
-    clock: opened,
-    fn: () => true,
-    target: $isOpened,
-  });
-
-  sample({
     clock: close,
     target: closed,
   });
 
   sample({
-    clock: closed,
-    fn: () => false,
+    clock: [opened.map(() => true), closed.map(() => false)],
     target: $isOpened,
   });
 
@@ -134,6 +129,7 @@ export function createRoute<
     openedOnServer,
 
     internal: {
+      navigated,
       close,
       openFx: openFx as Effect<any, any, any>,
       setAsyncImport: (value: AsyncBundleImport) => (asyncImport = value),
