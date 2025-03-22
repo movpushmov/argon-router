@@ -1,4 +1,11 @@
-import { createEvent, createStore, Effect, sample, Store } from 'effector';
+import {
+  createEvent,
+  createStore,
+  Effect,
+  EventCallable,
+  sample,
+  Store,
+} from 'effector';
 import {
   NavigatePayload,
   Query,
@@ -187,15 +194,13 @@ function transformParams(
 type FactoryPayload = {
   $activeRoutes: Store<Route<any>[]>;
   $query: Store<Query>;
-  $path: Store<string>;
-  navigateFx: Effect<NavigatePayload, void>;
+  navigate: EventCallable<NavigatePayload>;
 };
 
 export function trackQueryFactory({
   $activeRoutes,
-  $path,
   $query,
-  navigateFx,
+  navigate,
 }: FactoryPayload) {
   return <T extends RawConfig>(
     config: QueryTrackerConfig<T>,
@@ -241,8 +246,8 @@ export function trackQueryFactory({
 
     sample({
       clock: exit,
-      source: { path: $path, query: $query },
-      fn: ({ path, query }, payload) => {
+      source: $query,
+      fn: (query, payload) => {
         if (payload && payload.ignoreParams) {
           const copy: Query = {};
 
@@ -252,12 +257,12 @@ export function trackQueryFactory({
             }
           }
 
-          return { query: copy, path };
+          return { query: copy };
         }
 
-        return { query: {}, path };
+        return { query: {} };
       },
-      target: navigateFx,
+      target: navigate,
     });
 
     return {

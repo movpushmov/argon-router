@@ -136,4 +136,22 @@ describe('router', () => {
   test('navigate with params', async () => {});
 
   test('route.open with params', async () => {});
+
+  test('route not opened when history blocked', async () => {
+    const scope = fork();
+    const route1 = createRoute({ path: '/step1' });
+    const route2 = createRoute({ path: '/step2' });
+
+    const router = createRouter({ routes: [route1, route2] });
+    const history = createMemoryHistory({ initialEntries: ['/step1'] });
+
+    await allSettled(router.setHistory, { scope, params: history });
+
+    history.block(() => false);
+    await allSettled(route2.open, { scope, params: {} });
+
+    expect(scope.getState(router.$activeRoutes)[0]).toEqual(route1);
+    expect(scope.getState(route1.$isOpened)).toBeTruthy();
+    expect(scope.getState(route2.$isOpened)).toBeFalsy();
+  });
 });

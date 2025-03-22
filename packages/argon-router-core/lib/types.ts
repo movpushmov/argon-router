@@ -84,8 +84,8 @@ export interface Route<T = void> {
 }
 
 export type NavigatePayload = {
-  path: string;
   query: Query;
+  path?: string;
   replace?: boolean;
 };
 
@@ -126,18 +126,17 @@ export interface Router {
   };
 }
 
+type InternalOpenedPayload<T> = RouteOpenedPayload<T> & { navigate?: boolean };
+
 export interface InternalRouteParams<T> {
   path: string;
 
   parent?: InternalRoute<any>;
   close: EventCallable<void>;
 
+  navigated: EventCallable<RouteOpenedPayload<T>>;
   beforeOpen?: Effect<any, any, any>[];
-  openFx: Effect<
-    RouteOpenedPayload<T> & { historyIgnore?: boolean },
-    RouteOpenedPayload<T> & { historyIgnore?: boolean },
-    Error
-  >;
+  openFx: Effect<InternalOpenedPayload<T>, InternalOpenedPayload<T>, Error>;
 
   setAsyncImport: (value: AsyncBundleImport) => void;
 }
