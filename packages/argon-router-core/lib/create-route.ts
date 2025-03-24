@@ -23,6 +23,23 @@ interface Config<T> {
 
 type SafeParams<T> = T extends Record<string, never> ? void : T;
 
+/**
+ * @description Creates argon route
+ * @param config Route config
+ * @returns `Route\<Params\>`
+ * @link https://movpushmov.dev/argon-router/core/create-route.html
+ * @example ```ts
+ * import { createRoute } from '@argon-router/core';
+ *
+ * // basic
+ * const route = createRoute({ path: '/route' });
+ * route.open();
+ *
+ * // with params
+ * const postRoute = createRoute({ path: '/post/:id' });
+ * //       ^---  Route<{ id: string }>
+ * ```
+ */
 export function createRoute<
   T extends string,
   Params = SafeParams<ParseUrlParams<T>>,

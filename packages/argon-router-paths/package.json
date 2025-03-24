@@ -1,0 +1,56 @@
+{
+  "name": "@argon-router/paths",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "private": false,
+  "version": "0.5.1",
+  "description": "Paths with power of effector",
+  "keywords": [
+    "paths",
+    "argon",
+    "argon-router"
+  ],
+  "author": "movpushmov",
+  "homepage": "https://github.com/movpushmov/argon-router#readme",
+  "license": "MIT",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/movpushmov/argon-router.git"
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run"
+  },
+  "bugs": {
+    "url": "https://github.com/movpushmov/argon-router/issues"
+  },
+  "peerDependencies": {
+    "effector": ">=23",
+    "patronum": ">=2.2"
+  },
+  "devDependencies": {
+    "@types/history": "^4.7.11"
+  },
+  "dependencies": {
+    "path-to-regexp": "^8.2.0",
+    "query-string": "^9.1.1",
+    "typed-url-params": "^1.0.1"
+  }
+}

@@ -1,7 +1,6 @@
 import {
   createEvent,
   createStore,
-  Effect,
   EventCallable,
   sample,
   Store,
