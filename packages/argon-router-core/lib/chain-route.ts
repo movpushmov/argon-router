@@ -73,6 +73,9 @@ function createVirtualRoute<T>(pending: Store<boolean>): VirtualRoute<T> {
     close,
     closed,
 
+    // @ts-expect-error emulated path for virtual route
+    path: null,
+
     '@@unitShape': () => ({
       params: $params,
       isOpened: $isOpened,

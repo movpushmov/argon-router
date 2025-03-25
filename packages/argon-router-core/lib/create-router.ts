@@ -7,18 +7,19 @@ import {
   scopeBind,
 } from 'effector';
 import { InternalRoute, NavigatePayload, Query, Route, Router } from './types';
-import { compile, match } from 'path-to-regexp';
 import { trackQueryFactory } from './track-query';
 
 import type { History } from 'history';
-import { spread } from 'patronum';
 
 import queryString from 'query-string';
+import { compile } from '@argon-router/paths';
 
 interface RouterConfig {
   base?: string;
   routes: Route<any>[];
 }
+
+type LocationState = { path: string; query: Query };
 
 /**
  * @description Creates argon router
@@ -57,9 +58,13 @@ export function createRouter(config: RouterConfig): Router {
   const { base = '/', routes } = config;
 
   const $history = createStore<History | null>(null, { serialize: 'ignore' });
+  const $locationState = createStore<LocationState>({
+    query: {},
+    path: null as unknown as string,
+  });
 
-  const $query = createStore<Query>({});
-  const $path = createStore<string>(null as unknown as string);
+  const $query = $locationState.map((state) => state.query);
+  const $path = $locationState.map((state) => state.path);
 
   const setHistory = createEvent<History>();
   const navigate = createEvent<NavigatePayload>();
@@ -76,31 +81,37 @@ export function createRouter(config: RouterConfig): Router {
     let internalRoute = route as InternalRoute<any>;
     const path: string[] = [];
 
-    path.unshift(internalRoute.internal.path);
+    path.unshift(internalRoute.path);
 
-    while (internalRoute.internal.parent) {
-      internalRoute = internalRoute.internal.parent;
+    while (internalRoute.parent) {
+      internalRoute = internalRoute.parent as InternalRoute<any>;
 
-      if (internalRoute.internal.path !== '/') {
-        path.unshift(internalRoute.internal.path);
+      if (internalRoute.path !== '/') {
+        path.unshift(internalRoute.path);
       }
     }
 
     const joinedPath = base === '/' ? path.join('') : [base, ...path].join('');
 
+    const { build, parse } = compile<string, any>(joinedPath);
+
     return {
       route: route as InternalRoute<any>,
       path: joinedPath,
-      toPath: compile(joinedPath),
-      fromPath: match(joinedPath),
+      build,
+      parse,
     };
   });
 
   const $activeRoutes = $path.map((path) => {
     const result: Route<any>[] = [];
 
-    for (const { route, fromPath } of mappedRoutes) {
-      if (fromPath(path)) {
+    if (!path) {
+      return result;
+    }
+
+    for (const { route, parse } of mappedRoutes) {
+      if (parse(path)) {
         result.push(route);
       }
     }
@@ -151,8 +162,8 @@ export function createRouter(config: RouterConfig): Router {
   const openRoutesByPathFx = attach({
     source: { query: $query, path: $path },
     effect: async ({ query, path }) => {
-      for (const { route, fromPath } of mappedRoutes) {
-        const matchResult = fromPath(path);
+      for (const { route, parse } of mappedRoutes) {
+        const matchResult = parse(path);
         const [routeClosed, routeNavigated] = [
           scopeBind(route.internal.close),
           scopeBind(route.internal.navigated),
@@ -170,13 +181,13 @@ export function createRouter(config: RouterConfig): Router {
     },
   });
 
-  for (const { route, toPath } of mappedRoutes) {
+  for (const { route, build } of mappedRoutes) {
     sample({
       clock: route.internal.openFx.doneData,
       filter: (payload) => payload?.navigate !== false,
       fn: (payload): NavigatePayload => {
         return {
-          path: toPath(
+          path: build(
             payload && 'params' in payload ? payload.params : undefined,
           ),
           query: payload?.query ?? {},
@@ -204,12 +215,7 @@ export function createRouter(config: RouterConfig): Router {
       path: location.pathname,
       query: location.query,
     }),
-    target: spread({
-      targets: {
-        path: $path,
-        query: $query,
-      },
-    }),
+    target: $locationState,
   });
 
   sample({

@@ -13,15 +13,13 @@ import {
   RouteOpenedPayload,
 } from './types';
 
-import { ParseUrlParams } from 'typed-url-params';
+import { ParseUrlParams } from '@argon-router/paths';
 
 interface Config<T> {
   path: T;
   parent?: Route<any>;
   beforeOpen?: Effect<void, any, any>[];
 }
-
-type SafeParams<T> = T extends Record<string, never> ? void : T;
 
 /**
  * @description Creates argon route
@@ -38,12 +36,19 @@ type SafeParams<T> = T extends Record<string, never> ? void : T;
  * // with params
  * const postRoute = createRoute({ path: '/post/:id' });
  * //       ^---  Route<{ id: string }>
+ *
+ * // with parent
+ * const profile = createRoute({ path: '/profile/:id' });
+ *
+ * const friends = createRoute({ path: '/friends', parent: profile });
+ * const posts = createRoute({ path: '/posts', parent: profile });
+ *
+ * posts.open(); // profile.$isOpened -> true, posts.$isOpened -> true
  * ```
  */
-export function createRoute<
-  T extends string,
-  Params = SafeParams<ParseUrlParams<T>>,
->(config: Config<T>): Route<Params> {
+export function createRoute<T extends string, Params = ParseUrlParams<T>>(
+  config: Config<T>,
+): Route<Params> {
   let asyncImport: AsyncBundleImport;
 
   type OpenPayload = RouteOpenedPayload<Params>;
@@ -145,12 +150,13 @@ export function createRoute<
     openedOnClient,
     openedOnServer,
 
+    ...config,
+
     internal: {
       navigated,
       close,
       openFx: openFx as Effect<any, any, any>,
       setAsyncImport: (value: AsyncBundleImport) => (asyncImport = value),
-      ...config,
     },
 
     '@@unitShape': () => ({

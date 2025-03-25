@@ -8,19 +8,9 @@ export default defineConfig({
     outDir: resolve(__dirname, 'dist'),
     lib: {
       entry: resolve(__dirname, 'lib/index.ts'),
-      name: '@effector-reform/core',
+      name: '@effector-reform/paths',
       fileName: 'index',
       formats: ['es', 'cjs'],
-    },
-    rollupOptions: {
-      external: ['effector', 'patronum', '@effector-reform/core'],
-      output: {
-        globals: {
-          effector: 'effector',
-          patronum: 'patronum',
-          '@effector-reform/core': '@effector-reform/core',
-        },
-      },
     },
   },
   plugins: [

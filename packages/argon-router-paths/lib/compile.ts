@@ -1,66 +1,29 @@
-type RawRules = {
-  required: boolean;
-  type: 'string' | 'number' | { type: 'union'; values: string[] };
-  array?: { minLength?: number; maxLength?: number };
-};
+import { prepareParser } from './prepare-parser';
+import { getTokenParameters } from './get-token-parameters';
+import { ParameterToken, ParseUrlParams, Token } from './types';
+import { prepareBuilder } from './prepare-builder';
 
-type RawBlock = {
-  name: string;
-  rules: RawRules;
-};
+export function compile<T extends string, Params = ParseUrlParams<T>>(path: T) {
+  const tokens: Token[] = [];
 
-type Validator = (input?: string) => boolean;
+  const regexp = /:(\w+)(<[\w|]+>)?({\d+\,\d+})?([+*?])?/;
+  const parsedTokens = path.split('/').filter(Boolean);
 
-type Block = {
-  name: string;
-  validator: Validator;
-  parser: (input?: string) => any;
-};
+  for (let i = 0; i < parsedTokens.length; i++) {
+    const parsedToken = parsedTokens[i];
 
-function generateValidator(rules: RawRules): Validator {
-  return (input?: string) => {
-    if (rules.required && !input) {
-      return false;
-    }
-
-    if (rules.array) {
-      const { minLength, maxLength } = rules.array;
-      const parsed = input!.split(',');
-
-      if (
-        parsed.length > (maxLength ?? Infinity) ||
-        parsed.length < (minLength ?? 0)
-      ) {
-        return false;
-      }
-    } else {
-    }
-  };
-}
-
-export function compile<T extends string>(path: T) {
-  const blocks: Block[] = [];
-
-  const regexp = /:(\w+)(<[\w|]+>)?([+*?])?/;
-
-  const parsedBlocks = path.split('/').filter(Boolean);
-
-  for (let i = 0; i < parsedBlocks.length; i++) {
-    const block = parsedBlocks[i];
-
-    if (!block) {
+    if (!parsedToken) {
       continue;
     }
 
-    const matches = block.match(regexp);
+    const parameters = getTokenParameters(parsedToken.match(regexp));
 
-    if (!matches) {
+    if (!parameters) {
+      tokens.push({ type: 'const', name: parsedToken, payload: undefined });
       continue;
     }
 
-    const name = matches[0];
-    const generic = matches[1];
-    const modificator = matches[2];
+    const { arrayProps, genericProps, modificator, name } = parameters;
 
     if (!name) {
       throw new Error(
@@ -68,64 +31,61 @@ export function compile<T extends string>(path: T) {
       );
     }
 
-    const result: RawBlock = { name, validator: () => true };
+    const token: ParameterToken = {
+      type: 'parameter',
+      name,
+      payload: {
+        required: true,
+      },
+    };
 
-    if (generic) {
-      const type = generic.replace('<', '').replace('>', '');
+    if (genericProps && genericProps === 'number') {
+      token.payload.genericProps = { type: 'number' };
+    }
 
-      if (type === 'number') {
-        result.validator = (input?: string) =>
-          input !== undefined && !isNaN(parseInt(input));
-      }
-
-      if (type.includes('|')) {
-        const parsed = type.split('|').filter(Boolean);
-        result.validator = (input?: string) =>
-          input !== undefined && parsed.includes(input);
-      }
+    if (genericProps && genericProps.includes('|')) {
+      token.payload.genericProps = {
+        type: 'union',
+        items: genericProps.split('|'),
+      };
     }
 
     switch (modificator) {
       case '*': {
+        token.payload.arrayProps = {};
         break;
       }
       case '+': {
+        token.payload.arrayProps = { min: 1 };
         break;
       }
       case '?': {
-        if (i + 1 < parsedBlocks.length) {
-          throw new Error(
-            `Invalid path: "${path}". Optional parameters cannot be defined not in the end of path`,
-          );
-        }
-
-        result.validator = input;
-
+        token.payload.required = false;
         break;
       }
     }
 
-    blocks.push(result);
+    if (arrayProps) {
+      token.payload.arrayProps = {
+        ...token.payload.arrayProps,
+        min: arrayProps[0],
+        max: arrayProps[1],
+      };
+    }
+
+    tokens.push(token);
   }
 
   return {
     /**
-     * @param input input path
-     * @returns `{ path: string; params: Params }` | `void`
+     * @param input Input path
+     * @returns `{ path: string; params: Params }` | `null`
      */
-    parse(input: string) {},
-
-    build() {},
+    parse: prepareParser<Params>(tokens),
+    /**
+     * @param params Route parameters
+     * @returns string
+     */
+    build: prepareBuilder<Params>(tokens),
   };
 }
-
-compile('/:name');
-console.log('\n\n\n\n\n');
-compile('/name');
-console.log('\n\n\n\n\n');
-compile('/:name<number>');
-console.log('\n\n\n\n\n');
-//compile('/:name<number>+');
-console.log('\n\n\n\n\n');
-//compile('/:name<world|hello>+');
-console.log('\n\n\n\n\n');
