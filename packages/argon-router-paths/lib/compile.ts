@@ -3,6 +3,30 @@ import { getTokenParameters } from './get-token-parameters';
 import { ParameterToken, ParseUrlParams, Token } from './types';
 import { prepareBuilder } from './prepare-builder';
 
+/**
+ * @param path Route path
+ * @description compiles route and give two functions: build (from params to string) & parse (validate from string and get params)
+ * @returns { build: Builder<Params>; parse: Parser<Params>; }
+ * @example ```ts
+ * import { compile } from '@argon-router/paths';
+ *
+ * // without params
+ * const { parse, build } = compile('/profile');
+ *
+ * console.log(parse('/profile')) // { path: '/profile', params: null }
+ * console.log(parse('/test')) // null
+ *
+ * console.log(build()) // '/profile'
+ *
+ * // with params
+ * const { parse, build } = compile('/:id');
+ *
+ * console.log(parse('/movpushmov')) // { path: '/profile', params: { id: 'movpushmov' } }
+ * console.log(parse('/')) // null
+ *
+ * console.log(build({ id: 'movpushmov' })) // '/movpushmov'
+ * ```
+ */
 export function compile<T extends string, Params = ParseUrlParams<T>>(path: T) {
   const tokens: Token[] = [];
 

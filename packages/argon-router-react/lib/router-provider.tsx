@@ -7,6 +7,10 @@ interface RouterProviderProps {
   router: Router;
 }
 
+/**
+ * @description Provides router in React tree
+ * @param props Router provider config
+ */
 export const RouterProvider = (props: RouterProviderProps) => {
   return (
     <RouterProviderContext.Provider value={props.router}>

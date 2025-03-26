@@ -65,6 +65,7 @@ export default defineConfig({
           },
           { text: 'createRoutesView', link: '/react/create-routes-view' },
           { text: 'useRouter', link: '/react/use-router' },
+          { text: 'Link', link: '/react/link' },
         ],
       },
     ],

@@ -8,6 +8,28 @@ type ForwardedLink = <Params = void>(
   props: LinkProps<Params> & { ref?: ForwardedRef<HTMLAnchorElement> },
 ) => ReactNode;
 
+/**
+ * @description Navigates user to provided route on click
+ * @link https://movpushmov.dev/argon-router/react/link.html
+ * @example ```tsx
+ * import { Link } from '@argon-router/react';
+ * import { routes } from '@shared/routing';
+ *
+ * function Profile({ user }) {
+ *   return (
+ *     <>
+ *       <Link to={routes.settings}>Settings</Link>
+ *
+ *       {user.posts.map((post) => (
+ *         <Link to={routes.editPost} params={{ id: post.id }}>
+ *           Edit post
+ *         </Link>
+ *       ))}
+ *     </>
+ *   );
+ * }
+ * ```
+ */
 export const Link: ForwardedLink = forwardRef<
   HTMLAnchorElement,
   LinkProps<any>

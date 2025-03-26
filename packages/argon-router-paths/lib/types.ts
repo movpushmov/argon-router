@@ -79,8 +79,7 @@ type Unwrap<Result extends UrlParams<any, void>> = {
 
 /**
  * @description Extracts the parameters from a URL string.
- * @example
- *
+ * @example ```ts
  * type Params = ParseUrlParams<'/:id/:name'>;
  * //      ^----- { id: string, name: string }
  *
@@ -110,6 +109,7 @@ type Unwrap<Result extends UrlParams<any, void>> = {
  *
  * type Params = ParseUrlParams<'/'>;
  * //      ^----- void
+ * ```
  */
 export type ParseUrlParams<T extends string> = Unwrap<UrlParams<T>>;
 

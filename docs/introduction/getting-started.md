@@ -7,7 +7,8 @@ title: Getting started
 ## Installation
 
 ::: warning
-argon-router is extermely unstable & maybe buggy. DO NOT USE IN PRODUCTION!
+argon-router is not production ready yet and still may have bugs and unstable API.
+If you found bug — please report it on GitHub.
 :::
 
 ::: code-group
