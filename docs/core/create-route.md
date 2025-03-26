@@ -50,3 +50,6 @@ posts.open(); // profile.$isOpened -> true, posts.$isOpened -> true
 | openedOnClient | Event\<RouteOpenedPayload\<T\>\>         | route opened on client                                       |
 | opened         | Event\<RouteOpenedPayload\<T\>\>         | route opened on server (SSR) or client                       |
 | closed         | Event\<void\>                            | route closed                                                 |
+| path           | string                                   | route path                                                   |
+| parent         | Route\<any\>                             | parent path                                                  |
+| beforeOpen     | Effect\<any, any\>\[\]                   | before open effects                                          |
