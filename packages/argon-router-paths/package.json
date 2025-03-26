@@ -1,15 +1,14 @@
 {
-  "name": "@argon-router/core",
+  "name": "@argon-router/paths",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
   "private": false,
-  "version": "0.5.1",
-  "description": "Router with power of effector",
+  "version": "0.0.1",
+  "description": "Paths with power of effector",
   "keywords": [
-    "effector",
-    "router",
+    "paths",
     "argon",
     "argon-router"
   ],
@@ -41,16 +40,5 @@
   },
   "bugs": {
     "url": "https://github.com/movpushmov/argon-router/issues"
-  },
-  "peerDependencies": {
-    "effector": ">=23",
-    "patronum": ">=2.2"
-  },
-  "devDependencies": {
-    "@types/history": "^4.7.11"
-  },
-  "dependencies": {
-    "@argon-router/paths": "0.0.1",
-    "query-string": "^9.1.1"
   }
 }

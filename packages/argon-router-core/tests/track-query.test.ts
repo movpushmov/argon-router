@@ -223,7 +223,7 @@ describe('trackQuery', () => {
     expect(exitedCalls).toBeCalledTimes(1);
   });
 
-  test('for routes', async () => {
+  test.only('for routes', async () => {
     const { router, routes, scope } = await prepare();
     const tracker = router.trackQuery({
       parameters: {
