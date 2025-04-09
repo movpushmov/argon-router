@@ -13,15 +13,15 @@ argon-router is extermely unstable & maybe buggy. DO NOT USE IN PRODUCTION!
 ::: code-group
 
 ```bash [npm]
-npm install @argon-router/core
+npm install @argon-router/core history
 ```
 
 ```bash [yarn]
-yarn add @argon-router/core
+yarn add @argon-router/core history
 ```
 
 ```bash [pnpm]
-pnpm add @argon-router/core
+pnpm add @argon-router/core history
 ```
 
 :::
