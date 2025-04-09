@@ -3,7 +3,7 @@ import { AnchorHTMLAttributes, ComponentType, FC, ReactNode } from 'react';
 
 interface CreateBaseRouteViewProps {
   route: Route<any>;
-  layout?: ComponentType<{ children?: ReactNode }>;
+  layout?: ComponentType<{ children: ReactNode }>;
 }
 
 export interface CreateRouteViewProps extends CreateBaseRouteViewProps {
