@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.2](https://github.com/movpushmov/argon-router/compare/v0.6.1...v0.6.2) (2025-04-09)
+
+### Bug Fixes
+
+- react types ([82b2eac](https://github.com/movpushmov/argon-router/commit/82b2eace4e8ce5248e26babf3e9ac432cb3ce286))
+
 ## [0.6.1](https://github.com/movpushmov/argon-router/compare/v0.6.0...v0.6.1) (2025-03-26)
 
 **Note:** Version bump only for package argon-router
