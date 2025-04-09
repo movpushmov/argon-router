@@ -6,9 +6,9 @@ import {
   NumberParameter,
   StringParameter,
 } from './const';
-import { MatchFunction } from 'path-to-regexp';
 
 import { History } from 'history';
+import { Builder, Parser } from '@argon-router/paths';
 
 type SupportedPrimitive = string | number | Date | boolean;
 
@@ -74,6 +74,10 @@ export interface Route<T = void> {
 
   closed: Event<void>;
 
+  path: string;
+  parent?: Route<any>;
+  beforeOpen?: Effect<any, any, any>[];
+
   '@@unitShape': () => {
     params: Store<T>;
     isOpened: Store<boolean>;
@@ -84,8 +88,8 @@ export interface Route<T = void> {
 }
 
 export type NavigatePayload = {
-  path: string;
   query: Query;
+  path?: string;
   replace?: boolean;
 };
 
@@ -102,6 +106,31 @@ export interface Router {
 
   routes: Route<any>[];
 
+  /**
+   * @description Creates query params tracker
+   * @param config Query tacker config
+   * @link https://movpushmov.dev/argon-router/core/track-query.html
+   * @example ```ts
+   * import { parameters } from '@argon-router/core';
+   * import { router } from '@shared/router';
+   * import { createDialog } from '...';
+   *
+   * const dialog = createDialog();
+   * const tracker = router.trackQuery({
+   *   dialog: 'team-member',
+   *   id: parameters.number,
+   * });
+   *
+   * // triggered for:
+   * // /team?dialog=team-member&id=1
+   * // /team?dialog=team-member&id=10000
+   *
+   * // not triggered for:
+   * // /team?dialog=team&id=1
+   * // /team?id=10000
+   * // /team?dialog=team&id=not_number
+   * ```
+   */
   trackQuery: <ParametersConfig extends RawConfig>(
     config: QueryTrackerConfig<ParametersConfig>,
   ) => QueryTracker<ParametersConfig>;
@@ -109,10 +138,8 @@ export interface Router {
   mappedRoutes: {
     route: Route<any>;
     path: string;
-    toPath: (
-      data?: Partial<Record<string, string | string[]>> | undefined,
-    ) => string;
-    fromPath: MatchFunction<Partial<Record<string, string | string[]>>>;
+    build: Builder<any>;
+    parse: Parser<any>;
   }[];
 
   '@@unitShape': () => {
@@ -126,18 +153,12 @@ export interface Router {
   };
 }
 
+type InternalOpenedPayload<T> = RouteOpenedPayload<T> & { navigate?: boolean };
+
 export interface InternalRouteParams<T> {
-  path: string;
-
-  parent?: InternalRoute<any>;
   close: EventCallable<void>;
-
-  beforeOpen?: Effect<any, any, any>[];
-  openFx: Effect<
-    RouteOpenedPayload<T> & { historyIgnore?: boolean },
-    RouteOpenedPayload<T> & { historyIgnore?: boolean },
-    Error
-  >;
+  navigated: EventCallable<RouteOpenedPayload<T>>;
+  openFx: Effect<InternalOpenedPayload<T>, InternalOpenedPayload<T>, Error>;
 
   setAsyncImport: (value: AsyncBundleImport) => void;
 }

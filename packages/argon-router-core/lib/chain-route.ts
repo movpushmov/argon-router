@@ -73,6 +73,9 @@ function createVirtualRoute<T>(pending: Store<boolean>): VirtualRoute<T> {
     close,
     closed,
 
+    // @ts-expect-error emulated path for virtual route
+    path: null,
+
     '@@unitShape': () => ({
       params: $params,
       isOpened: $isOpened,
@@ -83,6 +86,47 @@ function createVirtualRoute<T>(pending: Store<boolean>): VirtualRoute<T> {
   };
 }
 
+/**
+ * @link https://movpushmov.dev/argon-router/core/chain-route.html
+ * @param props Chain route props
+ * @returns `Virtual route`
+ * @example ```ts
+ * import { createRoute, chainRoute } from '@argon-router/core';
+ * import { createEvent, createEffect } from 'effector';
+ *
+ * // base example
+ * const route = createRoute({ path: '/profile' });
+ *
+ * const authorized = createEvent();
+ * const rejected = createEvent();
+ *
+ * const checkAuthorizationFx = createEffect(async ({ params }) => {
+ *     // some logic
+ * });
+ *
+ * sample({
+ *   clock: checkAuthorizationFx.doneData,
+ *   target: authorized,
+ * });
+ *
+ * sample({
+ *   clock: checkAuthorizationFx.failData,
+ *   target: rejected,
+ * });
+ *
+ * const virtual = chainRoute({
+ *   route,
+ *   beforeOpen: checkAuthorizationFx,
+ *   openOn: authorized,
+ *   cancelOn: rejected,
+ * });
+ *
+ * // chain already chained routes
+ * const postRoute = createRoute({ path: '/post/:id' });
+ * const authorizedRoute = chainRoute({ route: postRoute, ... });
+ * const postLoadedRoute = chainRoute({ route: authorizedRoute, ... });
+ * ```
+ */
 export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
   const { route, beforeOpen, openOn, cancelOn } = props;
 
@@ -95,7 +139,7 @@ export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
   const virtualRoute = createVirtualRoute<T>(openFx.pending);
 
   sample({
-    clock: route.opened,
+    clock: route.open,
     target: openFx,
   });
 

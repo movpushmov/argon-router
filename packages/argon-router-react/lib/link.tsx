@@ -2,13 +2,34 @@ import { RouteOpenedPayload } from '@argon-router/core';
 import { ForwardedRef, forwardRef, ReactNode } from 'react';
 import { useRouterContext } from './use-router';
 import { useUnit } from 'effector-react';
-import { InternalRoute } from '@argon-router/core/lib/types';
 import { LinkProps } from './types';
 
 type ForwardedLink = <Params = void>(
   props: LinkProps<Params> & { ref?: ForwardedRef<HTMLAnchorElement> },
 ) => ReactNode;
 
+/**
+ * @description Navigates user to provided route on click
+ * @link https://movpushmov.dev/argon-router/react/link.html
+ * @example ```tsx
+ * import { Link } from '@argon-router/react';
+ * import { routes } from '@shared/routing';
+ *
+ * function Profile({ user }) {
+ *   return (
+ *     <>
+ *       <Link to={routes.settings}>Settings</Link>
+ *
+ *       {user.posts.map((post) => (
+ *         <Link to={routes.editPost} params={{ id: post.id }}>
+ *           Edit post
+ *         </Link>
+ *       ))}
+ *     </>
+ *   );
+ * }
+ * ```
+ */
 export const Link: ForwardedLink = forwardRef<
   HTMLAnchorElement,
   LinkProps<any>
@@ -21,10 +42,8 @@ export const Link: ForwardedLink = forwardRef<
   const { onOpen } = useUnit(to);
 
   if (!target) {
-    const { internal } = to as InternalRoute<any>;
-
     throw new Error(
-      `[Link] Route with path "${internal.path}" not found. Maybe it is not passed into createRouter?`,
+      `[Link] Route with path "${to.path}" not found. Maybe it is not passed into createRouter?`,
     );
   }
 
@@ -32,7 +51,7 @@ export const Link: ForwardedLink = forwardRef<
     <a
       {...anchorProps}
       ref={ref}
-      href={target.toPath(params ?? undefined)}
+      href={target.build(params ?? undefined)}
       onClick={(e) => {
         onClick?.(e);
 

@@ -14,6 +14,11 @@ export function useRouterContext() {
   return context;
 }
 
+/**
+ * @description Use router from provider
+ * @returns Router
+ * @link https://movpushmov.dev/argon-router/react/use-router.html
+ */
 export function useRouter() {
   return useUnit(useRouterContext());
 }

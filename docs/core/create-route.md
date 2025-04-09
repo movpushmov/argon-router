@@ -14,13 +14,28 @@ route.open();
 
 ### In-route path params
 
-You can specify params in route path and argon-router outputs type in route object generic by `typed-url-params` library. [Learn more about syntax](https://github.com/menduz/typed-url-params)
+You can specify params in route path and argon-router outputs type in route object generic by `typed-url-params` library. [Learn more about syntax](https://github.com/movpushmov/argon-router/tree/main/packages/argon-router-paths)
 
 ```ts
 import { createRoute } from '@argon-router/core';
 
 const postRoute = createRoute({ path: '/post/:id' });
 //       ^- Route<{ id: string }>
+```
+
+### Parent paths
+
+Sometimes you want to nest `path` parts and `beforeOpen` effects from some routes. You can do this easily with `parent` routes:
+
+```ts
+import { createRoute } from '@argon-router/core';
+
+const profile = createRoute({ path: '/profile/:id', beforeOpen: [] });
+
+const friends = createRoute({ path: '/friends', parent: profile });
+const posts = createRoute({ path: '/posts', parent: profile });
+
+posts.open(); // profile.$isOpened -> true, posts.$isOpened -> true
 ```
 
 ## API
@@ -35,3 +50,6 @@ const postRoute = createRoute({ path: '/post/:id' });
 | openedOnClient | Event\<RouteOpenedPayload\<T\>\>         | route opened on client                                       |
 | opened         | Event\<RouteOpenedPayload\<T\>\>         | route opened on server (SSR) or client                       |
 | closed         | Event\<void\>                            | route closed                                                 |
+| path           | string                                   | route path                                                   |
+| parent         | Route\<any\>                             | parent path                                                  |
+| beforeOpen     | Effect\<any, any\>\[\]                   | before open effects                                          |

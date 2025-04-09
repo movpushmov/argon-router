@@ -5,7 +5,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "private": false,
-  "version": "0.5.0",
+  "version": "0.6.1",
   "description": "Router with power of effector",
   "keywords": [
     "effector",
@@ -50,8 +50,7 @@
     "@types/history": "^4.7.11"
   },
   "dependencies": {
-    "path-to-regexp": "^8.2.0",
-    "query-string": "^9.1.1",
-    "typed-url-params": "^1.0.1"
+    "@argon-router/paths": "^0.6.1",
+    "query-string": "^9.1.1"
   }
 }

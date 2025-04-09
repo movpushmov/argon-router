@@ -1,30 +1,70 @@
-import { attach, createEvent, createStore, sample, scopeBind } from 'effector';
+import {
+  attach,
+  createEffect,
+  createEvent,
+  createStore,
+  sample,
+  scopeBind,
+} from 'effector';
 import { InternalRoute, NavigatePayload, Query, Route, Router } from './types';
-import { compile, match } from 'path-to-regexp';
 import { trackQueryFactory } from './track-query';
 
 import type { History } from 'history';
-import { spread } from 'patronum';
 
 import queryString from 'query-string';
+import { compile } from '@argon-router/paths';
 
 interface RouterConfig {
   base?: string;
   routes: Route<any>[];
 }
 
-type LocationState = { skipUpdate?: boolean };
-type Meta = { skipUpdate: boolean };
+type LocationState = { path: string; query: Query };
 
+/**
+ * @description Creates argon router
+ * @param config Router config
+ * @returns `Router`
+ * @link https://movpushmov.dev/argon-router/core/create-router.html
+ *
+ * `be careful! router need to be initialzed with setHistory event,
+ * which requires memory or browser history from history package.`
+ *
+ * @example ```ts
+ * import { createRouter } from '@argon-router/core';
+ * import { routes } from './routes';
+ *
+ * // create router
+ * const router = createRouter({
+ *   routes: [routes.route1, routes.route2],
+ * });
+ *
+ * // override path or query
+ * sample({
+ *  clock: goToPage,
+ *  fn: () => ({ path: '/page' }),
+ *  target: router.navigate,
+ * });
+ *
+ * sample({
+ *  clock: addQuery,
+ *  fn: () => ({ query: { param1: 'hello', params2: [1, 2] } }),
+ *  target: router.navigate,
+ * });
+ *
+ * ```
+ */
 export function createRouter(config: RouterConfig): Router {
   const { base = '/', routes } = config;
 
-  const $meta = createStore<Meta>({ skipUpdate: false });
-
   const $history = createStore<History | null>(null, { serialize: 'ignore' });
+  const $locationState = createStore<LocationState>({
+    query: {},
+    path: null as unknown as string,
+  });
 
-  const $query = createStore<Query>({});
-  const $path = createStore<string>(null as unknown as string);
+  const $query = $locationState.map((state) => state.query);
+  const $path = $locationState.map((state) => state.path);
 
   const setHistory = createEvent<History>();
   const navigate = createEvent<NavigatePayload>();
@@ -35,38 +75,43 @@ export function createRouter(config: RouterConfig): Router {
   const locationUpdated = createEvent<{
     pathname: string;
     query: Query;
-    state: LocationState;
   }>();
 
   const mappedRoutes = routes.map((route) => {
     let internalRoute = route as InternalRoute<any>;
     const path: string[] = [];
 
-    path.unshift(internalRoute.internal.path);
+    path.unshift(internalRoute.path);
 
-    while (internalRoute.internal.parent) {
-      internalRoute = internalRoute.internal.parent;
+    while (internalRoute.parent) {
+      internalRoute = internalRoute.parent as InternalRoute<any>;
 
-      if (internalRoute.internal.path !== '/') {
-        path.unshift(internalRoute.internal.path);
+      if (internalRoute.path !== '/') {
+        path.unshift(internalRoute.path);
       }
     }
 
     const joinedPath = base === '/' ? path.join('') : [base, ...path].join('');
 
+    const { build, parse } = compile<string, any>(joinedPath);
+
     return {
       route: route as InternalRoute<any>,
       path: joinedPath,
-      toPath: compile(joinedPath),
-      fromPath: match(joinedPath),
+      build,
+      parse,
     };
   });
 
   const $activeRoutes = $path.map((path) => {
     const result: Route<any>[] = [];
 
-    for (const { route, fromPath } of mappedRoutes) {
-      if (fromPath(path)) {
+    if (!path) {
+      return result;
+    }
+
+    for (const { route, parse } of mappedRoutes) {
+      if (parse(path)) {
         result.push(route);
       }
     }
@@ -75,19 +120,10 @@ export function createRouter(config: RouterConfig): Router {
   });
 
   const navigateFx = attach({
-    source: { history: $history, meta: $meta },
-    effect: async (
-      { history, meta },
-      { path, query, replace }: NavigatePayload,
-    ) => {
+    source: $history,
+    effect: (history, { path, query, replace }: NavigatePayload) => {
       if (!history) {
         throw new Error('history not found');
-      }
-
-      if (meta.skipUpdate) {
-        meta.skipUpdate = false;
-
-        return;
       }
 
       const payload = {
@@ -98,69 +134,60 @@ export function createRouter(config: RouterConfig): Router {
       if (replace) {
         history.replace(payload);
       } else {
-        history.push(payload, { skipUpdate: true } satisfies LocationState);
+        history.push(payload);
       }
     },
   });
 
-  const subscribeHistoryFx = attach({
-    source: $meta,
-    effect: (meta, history: History) => {
-      const historyLocationUpdated = scopeBind(locationUpdated);
+  const subscribeHistoryFx = createEffect((history: History) => {
+    const historyLocationUpdated = scopeBind(locationUpdated);
 
+    historyLocationUpdated({
+      pathname: history.location.pathname,
+      query: { ...queryString.parse(history.location.search) },
+    });
+
+    if (!history) {
+      throw new Error();
+    }
+
+    history.listen(({ location }) => {
       historyLocationUpdated({
-        pathname: history.location.pathname,
-        query: { ...queryString.parse(history.location.search) },
-        state: (history.location.state ?? {}) as LocationState,
+        pathname: location.pathname,
+        query: { ...queryString.parse(location.search) },
       });
-
-      if (!history) {
-        throw new Error();
-      }
-
-      history.listen(({ location }) => {
-        const state = (location.state ?? {}) as LocationState;
-
-        if (state.skipUpdate) {
-          meta.skipUpdate = true;
-        }
-
-        historyLocationUpdated({
-          pathname: location.pathname,
-          query: { ...queryString.parse(location.search) },
-          state,
-        });
-      });
-    },
+    });
   });
 
   const openRoutesByPathFx = attach({
     source: { query: $query, path: $path },
     effect: async ({ query, path }) => {
-      for (const { route, fromPath } of mappedRoutes) {
-        const matchResult = fromPath(path);
+      for (const { route, parse } of mappedRoutes) {
+        const matchResult = parse(path);
+        const [routeClosed, routeNavigated] = [
+          scopeBind(route.internal.close),
+          scopeBind(route.internal.navigated),
+        ];
 
         if (!matchResult) {
-          route.internal.close();
-          continue;
+          routeClosed();
         } else {
-          await route.internal.openFx({
+          routeNavigated({
             query,
             params: matchResult.params,
-            historyIgnore: true,
           });
         }
       }
     },
   });
 
-  for (const { route, toPath } of mappedRoutes) {
+  for (const { route, build } of mappedRoutes) {
     sample({
-      clock: route.opened,
-      filter: (payload: any) => !payload?.historyIgnore,
+      clock: route.internal.openFx.doneData,
+      filter: (payload) => payload?.navigate !== false,
       fn: (payload): NavigatePayload => {
         return {
-          path: toPath(
+          path: build(
             payload && 'params' in payload ? payload.params : undefined,
           ),
           query: payload?.query ?? {},
@@ -188,12 +215,7 @@ export function createRouter(config: RouterConfig): Router {
       path: location.pathname,
       query: location.query,
     }),
-    target: spread({
-      targets: {
-        path: $path,
-        query: $query,
-      },
-    }),
+    target: $locationState,
   });
 
   sample({
@@ -207,14 +229,9 @@ export function createRouter(config: RouterConfig): Router {
 
   sample({
     clock: navigate,
+    source: $path,
+    fn: (path, payload) => ({ path, ...payload }),
     target: navigateFx,
-  });
-
-  sample({
-    clock: [$query, $path],
-    source: { query: $query, path: $path },
-    fn: (payload) => payload,
-    target: navigate,
   });
 
   return {
@@ -233,7 +250,7 @@ export function createRouter(config: RouterConfig): Router {
 
     mappedRoutes,
 
-    trackQuery: trackQueryFactory({ $activeRoutes, $path, $query, navigateFx }),
+    trackQuery: trackQueryFactory({ $activeRoutes, $query, navigate }),
 
     '@@unitShape': () => ({
       query: $query,

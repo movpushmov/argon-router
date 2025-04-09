@@ -1,22 +1,26 @@
 {
-  "name": "@argon-router/react",
+  "name": "@argon-router/paths",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
   "private": false,
   "version": "0.6.1",
-  "description": "React bindings for argon router",
+  "description": "Paths with power of effector",
   "keywords": [
-    "effector",
+    "paths",
     "argon",
-    "router",
-    "argon-router",
-    "react"
+    "argon-router"
   ],
   "author": "movpushmov",
   "homepage": "https://github.com/movpushmov/argon-router#readme",
   "license": "MIT",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,12 +30,6 @@
       "require": "./dist/index.cjs"
     }
   },
-  "directories": {
-    "lib": "lib"
-  },
-  "files": [
-    "dist"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/movpushmov/argon-router.git"
@@ -42,21 +40,5 @@
   },
   "bugs": {
     "url": "https://github.com/movpushmov/argon-router/issues"
-  },
-  "dependencies": {
-    "@argon-router/core": "^0.6.1"
-  },
-  "devDependencies": {
-    "@babel/preset-react": "^7.26.3",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/react": "^16.2.0",
-    "@testing-library/user-event": "^14.6.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "jsdom": "^25.0.1"
-  },
-  "peerDependencies": {
-    "effector": ">=23",
-    "effector-react": ">=23",
-    "react": "18 || 19"
   }
 }
