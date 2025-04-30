@@ -44,6 +44,10 @@ export default defineConfig({
         text: 'Introduction',
         items: [
           { text: 'Getting started', link: '/introduction/getting-started' },
+          {
+            text: 'Which router i should choose?',
+            link: '/introduction/choose',
+          },
         ],
       },
       {
