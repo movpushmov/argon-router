@@ -2,7 +2,11 @@ import { Parser, Token } from './types';
 
 export function prepareParser<T>(tokens: Token[]): Parser<T> {
   return (input) => {
-    const rawTokens = input.split('/').filter(Boolean);
+    const rawTokens = input
+      .split('/')
+      .map((part) => part.trim())
+      .filter((part) => part !== '');
+
     let params: any = null;
 
     function setKey(key: string, value: any) {
@@ -18,12 +22,11 @@ export function prepareParser<T>(tokens: Token[]): Parser<T> {
     }
 
     for (let i = 0; i < tokens.length; i++) {
-      let rawToken = rawTokens[i];
       const token = tokens[i];
 
       switch (token.type) {
         case 'const': {
-          if (rawToken !== token.name) {
+          if (token.name !== rawTokens.shift()) {
             return null;
           }
 
@@ -34,8 +37,15 @@ export function prepareParser<T>(tokens: Token[]): Parser<T> {
 
           if (arrayProps) {
             const array: any[] = [];
+            let rawToken;
 
-            while (rawToken && array.length < (arrayProps.max ?? Infinity)) {
+            while (true) {
+              rawToken = rawTokens.shift();
+
+              if (!rawToken) {
+                break;
+              }
+
               switch (genericProps?.type) {
                 case 'number': {
                   if (isNaN(+rawToken)) {
@@ -60,20 +70,24 @@ export function prepareParser<T>(tokens: Token[]): Parser<T> {
                 }
               }
 
-              rawToken = rawTokens[i + array.length];
+              if (array.length >= (arrayProps.max ?? Infinity)) {
+                break;
+              }
             }
 
             if (array.length < (arrayProps.min ?? 0)) {
               return null;
             }
 
-            if (rawTokens[i + array.length] && !tokens[i + 1]) {
+            if (rawTokens.length > 0 && !tokens[i + 1]) {
               return null;
             }
 
             setKey(token.name, array);
             break;
           }
+
+          const rawToken = rawTokens.shift();
 
           if (required && !rawToken) {
             return null;
@@ -110,6 +124,10 @@ export function prepareParser<T>(tokens: Token[]): Parser<T> {
           }
         }
       }
+    }
+
+    if (rawTokens.length > 0) {
+      return null;
     }
 
     return { path: input, params };

@@ -288,6 +288,26 @@ describe('parse path', () => {
       params: { id: undefined },
     });
   });
+
+  test('parse path without parameter but with extra parts', () => {
+    const fp = compile('/profile');
+    const sp = compile('/profile/:id');
+
+    expect(fp.parse('/profile/1')).toStrictEqual(null);
+    expect(sp.parse('/profile/1')).toStrictEqual({
+      path: '/profile/1',
+      params: { id: '1' },
+    });
+  });
+
+  test('parse path with array parameter and extra parts', () => {
+    const fp = compile('/items/:id{2,2}/:hi');
+
+    expect(fp.parse('/items/1/2/hello')).toStrictEqual({
+      path: '/items/1/2/hello',
+      params: { id: ['1', '2'], hi: 'hello' },
+    });
+  });
 });
 
 describe('build path', () => {
