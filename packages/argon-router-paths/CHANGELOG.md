@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.3](https://github.com/movpushmov/argon-router/compare/v0.6.2...v0.6.3) (2025-04-30)
+
+### Bug Fixes
+
+- paths parsing ([b5cd7cf](https://github.com/movpushmov/argon-router/commit/b5cd7cfc663791ff74eadae43a2d338e03e0888f))
+
 ## [0.6.1](https://github.com/movpushmov/argon-router/compare/v0.6.0...v0.6.1) (2025-03-26)
 
 **Note:** Version bump only for package @argon-router/paths
