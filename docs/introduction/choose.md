@@ -2,11 +2,11 @@
 title: Choosing router
 ---
 
-# Choosing Between `atomic-router` and `argon-router` in Effector
+# Choosing Between `atomic-router` and `argon-router` in effector
 
 ## Overview
 
-When working with the Effector state manager, you have two main routing options:
+When working with the effector state manager, you have two main routing options:
 
 1. **`atomic-router`** - The established, stable routing solution
 2. **`argon-router`** - A newer alternative with additional features
