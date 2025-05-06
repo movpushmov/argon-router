@@ -196,6 +196,17 @@ type FactoryPayload = {
   navigate: EventCallable<NavigatePayload>;
 };
 
+type ControlsFactory = <T extends RawConfig>(
+  config: Omit<QueryTrackerConfig<T>, 'forRoutes'>,
+) => QueryTracker<T>;
+
+export function trackQueryControlsFactory({
+  $query,
+  navigate,
+}: Omit<FactoryPayload, '$activeRoutes'>): ControlsFactory {
+  return trackQueryFactory({ $activeRoutes: createStore([]), $query, navigate })
+}
+
 export function trackQueryFactory({
   $activeRoutes,
   $query,
