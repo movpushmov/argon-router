@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/movpushmov/argon-router/compare/v0.6.3...v0.7.0) (2025-05-06)
+
+### Features
+
+- router controls ([20ac242](https://github.com/movpushmov/argon-router/commit/20ac2427c067eb6c6959bac29df68cac34a5e359))
+
 ## [0.6.3](https://github.com/movpushmov/argon-router/compare/v0.6.2...v0.6.3) (2025-04-30)
 
 **Note:** Version bump only for package @argon-router/core
