@@ -9,7 +9,12 @@ import {
   Store,
   Unit,
 } from 'effector';
-import { Route, RouteOpenedPayload, VirtualRoute } from './types';
+import {
+  AsyncBundleImport,
+  Route,
+  RouteOpenedPayload,
+  VirtualRoute,
+} from './types';
 
 type BeforeOpenUnit<T> =
   | EventCallable<RouteOpenedPayload<T>>
@@ -130,7 +135,13 @@ function createVirtualRoute<T>(pending: Store<boolean>): VirtualRoute<T> {
 export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
   const { route, beforeOpen, openOn, cancelOn } = props;
 
+  let asyncImport: AsyncBundleImport;
+
+  const waitForAsyncBundleFx = createEffect(() => asyncImport?.());
+
   const openFx = createEffect(async (payload: RouteOpenedPayload<T>) => {
+    await waitForAsyncBundleFx();
+
     for (const trigger of (<BeforeOpenUnit<T>[]>[]).concat(beforeOpen)) {
       await trigger(payload);
     }
@@ -167,5 +178,9 @@ export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
     });
   }
 
-  return virtualRoute;
+  return Object.assign(virtualRoute, {
+    internal: {
+      setAsyncImport: (value: AsyncBundleImport) => (asyncImport = value),
+    },
+  });
 }

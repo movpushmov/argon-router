@@ -29,14 +29,14 @@ export type Query = Record<string, string | null | Array<string | null>>;
 
 export type ReadyConfig<T extends RawConfig> = {
   [K in keyof T]: T[K] extends StringParameter
-  ? string
-  : T[K] extends NumberParameter
-  ? number
-  : T[K] extends ArrayParameter
-  ? string[]
-  : T[K] extends AnyParameter
-  ? string | string[]
-  : never;
+    ? string
+    : T[K] extends NumberParameter
+      ? number
+      : T[K] extends ArrayParameter
+        ? string[]
+        : T[K] extends AnyParameter
+          ? string | string[]
+          : never;
 };
 
 export type QueryTrackerConfig<ParametersConfig extends RawConfig> = {

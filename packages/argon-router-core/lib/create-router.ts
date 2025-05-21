@@ -1,9 +1,5 @@
-import {
-  attach,
-  sample,
-  scopeBind,
-} from 'effector';
-import { InternalRoute, NavigatePayload, Query, Route, Router } from './types';
+import { attach, sample, scopeBind } from 'effector';
+import { InternalRoute, NavigatePayload, Route, Router } from './types';
 import { trackQueryFactory } from './track-query';
 
 import { compile } from '@argon-router/paths';
@@ -49,7 +45,15 @@ interface RouterConfig {
  */
 export function createRouter(config: RouterConfig): Router {
   const { base = '/', routes } = config;
-  const { $path, $query, back, forward, navigate, setHistory, locationUpdated } = createRouterControls();
+  const {
+    $path,
+    $query,
+    back,
+    forward,
+    navigate,
+    setHistory,
+    locationUpdated,
+  } = createRouterControls();
 
   const mappedRoutes = routes.map((route) => {
     let internalRoute = route as InternalRoute<any>;
