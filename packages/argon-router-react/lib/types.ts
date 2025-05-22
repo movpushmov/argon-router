@@ -1,16 +1,17 @@
 import { Route } from '@argon-router/core';
 import { AnchorHTMLAttributes, ComponentType, FC, ReactNode } from 'react';
 
-interface CreateBaseRouteViewProps {
-  route: Route<any>;
+interface CreateBaseRouteViewProps<T> {
+  route: Route<T>;
   layout?: ComponentType<{ children: ReactNode }>;
 }
 
-export interface CreateRouteViewProps extends CreateBaseRouteViewProps {
+export interface CreateRouteViewProps<T> extends CreateBaseRouteViewProps<T> {
   view: ComponentType;
 }
 
-export interface CreateLazyRouteViewProps extends CreateBaseRouteViewProps {
+export interface CreateLazyRouteViewProps<T>
+  extends CreateBaseRouteViewProps<T> {
   view: () => Promise<{ default: ComponentType }>;
   fallback?: ComponentType;
 }

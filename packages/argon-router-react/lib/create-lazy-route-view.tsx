@@ -26,10 +26,10 @@ import { InternalRoute } from '@argon-router/core/lib/types';
  * });
  * ```
  */
-export const createLazyRouteView = (
-  props: CreateLazyRouteViewProps,
-): RouteView => {
-  (props.route as InternalRoute<any>).internal.setAsyncImport(props.view);
+export function createLazyRouteView<T>(
+  props: CreateLazyRouteViewProps<T>,
+): RouteView {
+  (props.route as InternalRoute<T>).internal.setAsyncImport(props.view);
   const View = lazy(props.view);
 
   return {
@@ -50,4 +50,4 @@ export const createLazyRouteView = (
       );
     },
   };
-};
+}

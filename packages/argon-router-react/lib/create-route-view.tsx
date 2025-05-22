@@ -21,7 +21,7 @@ import { CreateRouteViewProps, RouteView } from './types';
  * });
  * ```
  */
-export const createRouteView = (props: CreateRouteViewProps): RouteView => {
+export function createRouteView<T>(props: CreateRouteViewProps<T>): RouteView {
   return {
     route: props.route,
     view: () => {
@@ -36,4 +36,4 @@ export const createRouteView = (props: CreateRouteViewProps): RouteView => {
       );
     },
   };
-};
+}
