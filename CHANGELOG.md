@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1](https://github.com/movpushmov/argon-router/compare/v0.8.0...v0.8.1) (2025-05-22)
+
+### Bug Fixes
+
+- update route view types ([ac02e7e](https://github.com/movpushmov/argon-router/commit/ac02e7e4078248f542c239366f9f376d213d4004))
+
 # [0.8.0](https://github.com/movpushmov/argon-router/compare/v0.7.0...v0.8.0) (2025-05-21)
 
 ### Bug Fixes
