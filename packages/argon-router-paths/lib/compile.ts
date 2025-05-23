@@ -30,7 +30,7 @@ import { prepareBuilder } from './prepare-builder';
 export function compile<T extends string, Params = ParseUrlParams<T>>(path: T) {
   const tokens: Token[] = [];
 
-  const regexp = /:(\w+)(<[\w|]+>)?({\d+\,\d+})?([+*?])?/;
+  const regexp = /:(\w+)(<[\s?\w|]+>)?({\d+\,\d+})?([+*?])?/;
   const parsedTokens = path.split('/').filter(Boolean);
 
   for (let i = 0; i < parsedTokens.length; i++) {
@@ -70,7 +70,7 @@ export function compile<T extends string, Params = ParseUrlParams<T>>(path: T) {
     if (genericProps && genericProps.includes('|')) {
       token.payload.genericProps = {
         type: 'union',
-        items: genericProps.split('|'),
+        items: genericProps.replaceAll(/\s/g, '').split('|'),
       };
     }
 
