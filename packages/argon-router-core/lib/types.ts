@@ -51,14 +51,14 @@ export interface QueryTracker<ParametersConfig extends RawConfig> {
   exit: EventCallable<{ ignoreParams: string[] } | void>;
 }
 
-type PayloadBase = {
+export type OpenPayloadBase = {
   query?: Query;
   replace?: boolean;
 };
 
 export type RouteOpenedPayload<T> = T extends void
-  ? void | undefined | PayloadBase
-  : { params: T } & PayloadBase;
+  ? void | undefined | OpenPayloadBase
+  : { params: T } & OpenPayloadBase;
 
 export interface Route<T = void> {
   $params: Store<T>;
@@ -170,6 +170,7 @@ export interface InternalRoute<T = any> extends Route<T> {
 export interface VirtualRoute<T = any> extends Route<T> {
   $params: StoreWritable<T>;
   close: EventCallable<void>;
+  cancelled: Event<void>;
 }
 
 export type LocationState = { path: string; query: Query };

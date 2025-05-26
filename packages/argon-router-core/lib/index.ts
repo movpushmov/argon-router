@@ -7,6 +7,7 @@ export type {
   Route,
   Router,
   Query,
+  OpenPayloadBase,
   RouteOpenedPayload,
   NavigatePayload,
   QueryTracker,
