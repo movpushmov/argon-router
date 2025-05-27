@@ -35,6 +35,8 @@ const virtual = chainRoute({
 });
 ```
 
+> Note: you can use `virtual.cancelled` event if you want to check is route cancelled
+
 ### Chain already chained routes
 
 ```ts

@@ -2,6 +2,7 @@ import { ComponentType, createElement, useMemo } from 'react';
 import { RouteView } from './types';
 import { useProvidedScope, useUnit } from 'effector-react';
 import { Scope, Store } from 'effector';
+import { InternalRoute } from '@argon-router/core/lib/types';
 
 interface CreateRoutesViewProps {
   routes: RouteView[];
@@ -40,19 +41,23 @@ export const createRoutesView = (props: CreateRoutesViewProps) => {
 
   return () => {
     const scope = useProvidedScope();
-    const displayedRoutes = useMemo(
-      () =>
-        routes.reduce<RouteView[]>((displayedRoutes, routeView) => {
-          if (getStoreValue(routeView.route.$isOpened, scope)) {
-            displayedRoutes.push(routeView);
-          }
+    const visibilities = useUnit(routes.map((view) => view.route.$isOpened));
 
-          return displayedRoutes;
-        }, []),
-      [scope, useUnit(routes.map(({ route }) => route.$isOpened))],
-    );
+    const openedViews = useMemo(() => {
+      const filtered = routes.filter((view) =>
+        Boolean(getStoreValue(view.route.$isOpened, scope)),
+      );
 
-    const lastRoute = displayedRoutes.at(-1);
+      return filtered.reduce(
+        (filtered, view) =>
+          filtered.filter(
+            (r) => r.route !== (view.route as InternalRoute<any>).parent,
+          ),
+        filtered,
+      );
+    }, [visibilities]);
+
+    const lastRoute = openedViews.at(-1);
 
     if (!lastRoute) {
       return NotFound ? <NotFound /> : null;

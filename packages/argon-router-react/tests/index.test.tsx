@@ -200,4 +200,59 @@ describe('react bindings', () => {
 
     expect(getByTestId('message').textContent).toBe('auth');
   });
+
+  test('nested routes', async () => {
+    const profileRoute = createRoute({ path: '/profile' });
+    const friendsRoute = createRoute({
+      path: '/friends',
+      parent: profileRoute,
+    });
+
+    const scope = fork();
+    const router = createRouter({ routes: [friendsRoute, profileRoute] });
+
+    const history = createMemoryHistory();
+
+    history.push('/app');
+
+    await allSettled(router.setHistory, { scope, params: history });
+
+    const RoutesView = createRoutesView({
+      routes: [
+        {
+          route: friendsRoute,
+          view: () => <p data-testid="message">friends</p>,
+        },
+        {
+          route: profileRoute,
+          view: () => <p data-testid="message">profile</p>,
+        },
+      ],
+      otherwise: () => <p data-testid="message">not found</p>,
+    });
+
+    const { getByTestId } = render(
+      <Provider value={scope}>
+        <RouterProvider router={router}>
+          <RoutesView />
+        </RouterProvider>
+      </Provider>,
+    );
+
+    await allSettled(friendsRoute.open, { scope, params: undefined });
+
+    await waitFor(() =>
+      expect(getByTestId('message').textContent).toBe('friends'),
+    );
+
+    expect(getByTestId('message').textContent).toBe('friends');
+
+    await allSettled(profileRoute.open, { scope, params: undefined });
+
+    await waitFor(() =>
+      expect(getByTestId('message').textContent).toBe('profile'),
+    );
+
+    expect(getByTestId('message').textContent).toBe('profile');
+  });
 });

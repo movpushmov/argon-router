@@ -1,10 +1,22 @@
-import { attach, createEffect, createEvent, createStore, sample, scopeBind } from "effector";
+import {
+  attach,
+  createEffect,
+  createEvent,
+  createStore,
+  sample,
+  scopeBind,
+} from 'effector';
 
 import queryString from 'query-string';
 
-import type { LocationState, NavigatePayload, Query, RouterControls } from "./types";
-import type { History } from "history";
-import { trackQueryControlsFactory } from "./track-query";
+import type {
+  LocationState,
+  NavigatePayload,
+  Query,
+  RouterControls,
+} from './types';
+import type { History } from 'history';
+import { trackQueryControlsFactory } from './track-query';
 
 /**
  * @description Creates argon router controls
@@ -75,7 +87,6 @@ export function createRouterControls(): RouterControls {
       }
     },
   });
-
 
   const subscribeHistoryFx = createEffect((history: History) => {
     const historyLocationUpdated = scopeBind(locationUpdated);
