@@ -13,14 +13,20 @@ import {
   RouteOpenedPayload,
 } from './types';
 
-import { ParseUrlParams } from '@argon-router/paths';
+import { ParseUrlParams, ValidatePath } from '@argon-router/paths';
 
-interface Config<T> {
-  path: T;
-  parent?: Route<any>;
-  beforeOpen?: Effect<void, any, any>[];
-}
-
+export type CreateRouteConfig<Path> =
+  ValidatePath<Path> extends ['invalid', infer Template]
+    ? {
+        path: Template;
+        parent?: Route<any>;
+        beforeOpen?: Effect<void, any, any>[];
+      }
+    : {
+        path: Path;
+        parent?: Route<any>;
+        beforeOpen?: Effect<void, any, any>[];
+      };
 /**
  * @description Creates argon route
  * @param config Route config
@@ -47,7 +53,7 @@ interface Config<T> {
  * ```
  */
 export function createRoute<T extends string, Params = ParseUrlParams<T>>(
-  config: Config<T>,
+  config: CreateRouteConfig<T>,
 ): Route<Params> {
   let asyncImport: AsyncBundleImport;
 
