@@ -1,12 +1,24 @@
 import { describe, expect, test } from 'vitest';
-import { chainRoute, createRoute, RouteOpenedPayload } from '../lib';
+import {
+  chainRoute,
+  createRoute,
+  RouteOpenedPayload,
+  createRouter,
+} from '../lib';
 import { allSettled, createEffect, createEvent, fork, sample } from 'effector';
+import { createMemoryHistory } from 'history';
 
 describe('chained routes', () => {
   test('authorized route', async () => {
     const scope = fork();
 
     const route = createRoute({ path: '/profile/:id' });
+    const router = createRouter({ routes: [route] });
+
+    await allSettled(router.setHistory, {
+      params: createMemoryHistory(),
+      scope,
+    });
 
     const authorized = createEvent();
     const rejected = createEvent();
