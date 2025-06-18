@@ -1,3 +1,5 @@
+import { ReplaceAll } from './types';
+
 type SplitPath<S> = string extends S
   ? string[]
   : S extends `${infer Head}/${infer Tail}`
@@ -19,12 +21,6 @@ type Join<T extends any[]> = T['length'] extends 0
         : `${F & string}/${Tail & string}`
       : never
     : never;
-
-type ReplaceAll<S, From extends string, To extends string> = From extends ''
-  ? S
-  : S extends `${infer R1}${From}${infer R2}`
-    ? `${R1}${To}${ReplaceAll<R2, From, To>}`
-    : S;
 
 type ValidateRange<Range> = Range extends `${infer L},${infer R}`
   ? L extends `${number}`

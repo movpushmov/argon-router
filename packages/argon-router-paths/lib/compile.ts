@@ -70,7 +70,7 @@ export function compile<T extends string, Params = ParseUrlParams<T>>(path: T) {
     if (genericProps && genericProps.includes('|')) {
       token.payload.genericProps = {
         type: 'union',
-        items: genericProps.replaceAll(/\s/g, '').split('|'),
+        items: genericProps.split('|'),
       };
     }
 
