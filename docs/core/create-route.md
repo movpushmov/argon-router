@@ -14,14 +14,28 @@ route.open();
 
 ### In-route path params
 
-You can specify params in route path and argon-router outputs type in route object generic by `typed-url-params` library. [Learn more about syntax](https://github.com/movpushmov/argon-router/tree/main/packages/argon-router-paths)
+Argon-router uses its own tool for parsing and building paths, while validating parameters for compliance with the specified type and other passed parameters constraints at runtime.
 
+By default, each parameter is treated as a string:
 ```ts
 import { createRoute } from '@argon-router/core';
 
 const postRoute = createRoute({ path: '/post/:id' });
 //       ^- Route<{ id: string }>
 ```
+
+However, you can also explicitly specify that a parameter should be of type `number` or `union`:
+```ts
+import { createRoute } from '@argon-router/core';
+
+const postRoute = createRoute({ path: '/post/:id<number>' });
+//       ^- Route<{ id: number }>
+
+const buildPostRoute = createRoute({ path: '/build-post/:mode<create|update>' });
+//       ^- Route<{ mode: 'create' | 'update' }>
+```
+
+You can also specify a number of modifiers for each parameter. More details about the syntax can be found [here](https://github.com/movpushmov/argon-router/tree/main/packages/argon-router-paths#supported-types).
 
 ### Parent paths
 

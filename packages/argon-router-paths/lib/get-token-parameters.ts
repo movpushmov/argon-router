@@ -14,7 +14,10 @@ export function getTokenParameters(params: RegExpMatchArray | null) {
     }
 
     if (parameter.includes('<')) {
-      genericProps = parameter.replace('<', '').replace('>', '');
+      genericProps = parameter
+        .replaceAll(/\s/g, '')
+        .replace('<', '')
+        .replace('>', '');
       continue;
     }
 

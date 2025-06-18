@@ -35,8 +35,33 @@ describe('parse path', () => {
     });
   });
 
+  test('parse path with generic parameter with dummy spaces (number)', () => {
+    const { parse } = compile('/profile/:id< number >');
+
+    expect(parse('/profile/12323')).toStrictEqual({
+      path: '/profile/12323',
+      params: { id: 12323 },
+    });
+  });
+
   test('parse path with generic parameter (union)', () => {
     const { parse } = compile('/profile/:id<hello|world>');
+
+    expect(parse('/profile/hello')).toStrictEqual({
+      path: '/profile/hello',
+      params: { id: 'hello' },
+    });
+
+    expect(parse('/profile/world')).toStrictEqual({
+      path: '/profile/world',
+      params: { id: 'world' },
+    });
+
+    expect(parse('/profile/test')).toStrictEqual(null);
+  });
+
+  test('parse path with generic parameter with dummy spaces (union)', () => {
+    const { parse } = compile('/profile/:id<hello | world >');
 
     expect(parse('/profile/hello')).toStrictEqual({
       path: '/profile/hello',
