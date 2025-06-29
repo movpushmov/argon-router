@@ -9,10 +9,18 @@ import {
   Store,
   Unit,
 } from 'effector';
-import { Route, RouteOpenedPayload, VirtualRoute } from './types';
+import {
+  AsyncBundleImport,
+  OpenPayloadBase,
+  Route,
+  RouteOpenedPayload,
+  VirtualRoute,
+} from './types';
 
 type BeforeOpenUnit<T> =
-  | EventCallable<RouteOpenedPayload<T>>
+  | (T extends void
+      ? EventCallable<void> | EventCallable<OpenPayloadBase>
+      : EventCallable<{ params: T } & OpenPayloadBase>)
   | Effect<RouteOpenedPayload<T>, any>;
 
 interface ChainRouteProps<T> {
@@ -35,6 +43,8 @@ function createVirtualRoute<T>(pending: Store<boolean>): VirtualRoute<T> {
 
   const close = createEvent();
   const closed = createEvent();
+
+  const cancelled = createEvent();
 
   sample({
     clock: open,
@@ -72,6 +82,8 @@ function createVirtualRoute<T>(pending: Store<boolean>): VirtualRoute<T> {
 
     close,
     closed,
+
+    cancelled,
 
     // @ts-expect-error emulated path for virtual route
     path: null,
@@ -130,8 +142,15 @@ function createVirtualRoute<T>(pending: Store<boolean>): VirtualRoute<T> {
 export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
   const { route, beforeOpen, openOn, cancelOn } = props;
 
+  let asyncImport: AsyncBundleImport;
+
+  const waitForAsyncBundleFx = createEffect(() => asyncImport?.());
+
   const openFx = createEffect(async (payload: RouteOpenedPayload<T>) => {
+    await waitForAsyncBundleFx();
+
     for (const trigger of (<BeforeOpenUnit<T>[]>[]).concat(beforeOpen)) {
+      // @ts-expect-error -- ts works very awful with this generics
       await trigger(payload);
     }
   });
@@ -139,7 +158,7 @@ export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
   const virtualRoute = createVirtualRoute<T>(openFx.pending);
 
   sample({
-    clock: route.open,
+    clock: route.opened,
     target: openFx,
   });
 
@@ -165,7 +184,16 @@ export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
       clock: (<Unit<void>[]>[route.closed]).concat(cancelOn),
       target: virtualRoute.close,
     });
+
+    sample({
+      clock: (<Unit<void>[]>[]).concat(cancelOn),
+      target: virtualRoute.cancelled as EventCallable<void>,
+    });
   }
 
-  return virtualRoute;
+  return Object.assign(virtualRoute, {
+    internal: {
+      setAsyncImport: (value: AsyncBundleImport) => (asyncImport = value),
+    },
+  });
 }

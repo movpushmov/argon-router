@@ -44,6 +44,10 @@ export default defineConfig({
         text: 'Introduction',
         items: [
           { text: 'Getting started', link: '/introduction/getting-started' },
+          {
+            text: 'Which router i should choose?',
+            link: '/introduction/choose',
+          },
         ],
       },
       {
@@ -51,6 +55,7 @@ export default defineConfig({
         items: [
           { text: 'createRoute', link: '/core/create-route' },
           { text: 'createRouter', link: '/core/create-router' },
+          { text: 'createRouterControls', link: '/core/create-router-controls' },
           { text: 'trackQuery', link: '/core/track-query' },
           { text: 'chainRoute', link: '/core/chain-route' },
         ],

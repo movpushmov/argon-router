@@ -2,6 +2,13 @@
 
 Creates routes view. Entry point for all routes. Works only in `<RouterProvider>`
 
+::: warning
+
+**Be careful**: if for some reason several routes are active at once,
+the layout will display the last one listed in the list.
+
+:::
+
 ### Example
 
 ```tsx

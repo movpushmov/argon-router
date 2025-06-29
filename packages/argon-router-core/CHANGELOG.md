@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.3](https://github.com/movpushmov/argon-router/compare/v0.8.2...v0.8.3) (2025-05-27)
+
+### Bug Fixes
+
+- chain route ([55e3324](https://github.com/movpushmov/argon-router/commit/55e3324feaf4aba173c36a49d191f386255aeb53))
+
+## [0.8.2](https://github.com/movpushmov/argon-router/compare/v0.8.0...v0.8.2) (2025-05-27)
+
+### Bug Fixes
+
+- chained routes ([5d77fe5](https://github.com/movpushmov/argon-router/commit/5d77fe5ff637a816975482c2902458707a68195e))
+- create routes view ([a267e31](https://github.com/movpushmov/argon-router/commit/a267e313629fc62174407fe72bbc3e77f737f7b8))
+
+# [0.8.0](https://github.com/movpushmov/argon-router/compare/v0.7.0...v0.8.0) (2025-05-21)
+
+### Bug Fixes
+
+- lazy route async import ([1ea910e](https://github.com/movpushmov/argon-router/commit/1ea910eca226fd8eba182b87af866bd8d115f12a))
+
+# [0.7.0](https://github.com/movpushmov/argon-router/compare/v0.6.3...v0.7.0) (2025-05-06)
+
+### Features
+
+- router controls ([20ac242](https://github.com/movpushmov/argon-router/commit/20ac2427c067eb6c6959bac29df68cac34a5e359))
+
+## [0.6.3](https://github.com/movpushmov/argon-router/compare/v0.6.2...v0.6.3) (2025-04-30)
+
+**Note:** Version bump only for package @argon-router/core
+
 ## [0.6.1](https://github.com/movpushmov/argon-router/compare/v0.6.0...v0.6.1) (2025-03-26)
 
 **Note:** Version bump only for package @argon-router/core

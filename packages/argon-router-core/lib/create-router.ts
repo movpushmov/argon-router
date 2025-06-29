@@ -1,25 +1,14 @@
-import {
-  attach,
-  createEffect,
-  createEvent,
-  createStore,
-  sample,
-  scopeBind,
-} from 'effector';
-import { InternalRoute, NavigatePayload, Query, Route, Router } from './types';
+import { attach, sample, scopeBind } from 'effector';
+import { InternalRoute, NavigatePayload, Route, Router } from './types';
 import { trackQueryFactory } from './track-query';
 
-import type { History } from 'history';
-
-import queryString from 'query-string';
 import { compile } from '@argon-router/paths';
+import { createRouterControls } from './create-router-controls';
 
 interface RouterConfig {
   base?: string;
   routes: Route<any>[];
 }
-
-type LocationState = { path: string; query: Query };
 
 /**
  * @description Creates argon router
@@ -56,26 +45,15 @@ type LocationState = { path: string; query: Query };
  */
 export function createRouter(config: RouterConfig): Router {
   const { base = '/', routes } = config;
-
-  const $history = createStore<History | null>(null, { serialize: 'ignore' });
-  const $locationState = createStore<LocationState>({
-    query: {},
-    path: null as unknown as string,
-  });
-
-  const $query = $locationState.map((state) => state.query);
-  const $path = $locationState.map((state) => state.path);
-
-  const setHistory = createEvent<History>();
-  const navigate = createEvent<NavigatePayload>();
-
-  const back = createEvent();
-  const forward = createEvent();
-
-  const locationUpdated = createEvent<{
-    pathname: string;
-    query: Query;
-  }>();
+  const {
+    $path,
+    $query,
+    back,
+    forward,
+    navigate,
+    setHistory,
+    locationUpdated,
+  } = createRouterControls();
 
   const mappedRoutes = routes.map((route) => {
     let internalRoute = route as InternalRoute<any>;
@@ -119,46 +97,6 @@ export function createRouter(config: RouterConfig): Router {
     return result;
   });
 
-  const navigateFx = attach({
-    source: $history,
-    effect: (history, { path, query, replace }: NavigatePayload) => {
-      if (!history) {
-        throw new Error('history not found');
-      }
-
-      const payload = {
-        pathname: path,
-        search: `?${queryString.stringify(query)}`,
-      };
-
-      if (replace) {
-        history.replace(payload);
-      } else {
-        history.push(payload);
-      }
-    },
-  });
-
-  const subscribeHistoryFx = createEffect((history: History) => {
-    const historyLocationUpdated = scopeBind(locationUpdated);
-
-    historyLocationUpdated({
-      pathname: history.location.pathname,
-      query: { ...queryString.parse(history.location.search) },
-    });
-
-    if (!history) {
-      throw new Error();
-    }
-
-    history.listen(({ location }) => {
-      historyLocationUpdated({
-        pathname: location.pathname,
-        query: { ...queryString.parse(location.search) },
-      });
-    });
-  });
-
   const openRoutesByPathFx = attach({
     source: { query: $query, path: $path },
     effect: async ({ query, path }) => {
@@ -199,39 +137,12 @@ export function createRouter(config: RouterConfig): Router {
   }
 
   sample({
-    clock: setHistory,
-    target: $history,
-  });
-
-  sample({
-    clock: $history,
-    filter: Boolean,
-    target: subscribeHistoryFx,
-  });
-
-  sample({
-    clock: locationUpdated,
-    fn: (location) => ({
-      path: location.pathname,
-      query: location.query,
-    }),
-    target: $locationState,
-  });
-
-  sample({
     clock: locationUpdated,
     fn: (location) => ({
       path: location.pathname,
       query: location.query,
     }),
     target: openRoutesByPathFx,
-  });
-
-  sample({
-    clock: navigate,
-    source: $path,
-    fn: (path, payload) => ({ path, ...payload }),
-    target: navigateFx,
   });
 
   return {

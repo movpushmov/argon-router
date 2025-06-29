@@ -1,12 +1,16 @@
-import { ComponentType, createElement } from 'react';
-import { useRouter } from './use-router';
-import { Route } from '@argon-router/core';
-import { InternalRoute } from '@argon-router/core/lib/types';
+import { ComponentType, createElement, useMemo } from 'react';
 import { RouteView } from './types';
+import { useProvidedScope, useUnit } from 'effector-react';
+import { Scope, Store } from 'effector';
+import { InternalRoute } from '@argon-router/core/lib/types';
 
 interface CreateRoutesViewProps {
   routes: RouteView[];
   otherwise?: ComponentType;
+}
+
+function getStoreValue<T>(store: Store<T>, scope: Scope | null): T {
+  return scope ? scope.getState(store) : store.getState();
 }
 
 /**
@@ -36,20 +40,29 @@ export const createRoutesView = (props: CreateRoutesViewProps) => {
   const { routes, otherwise: NotFound } = props;
 
   return () => {
-    const { activeRoutes } = useRouter();
+    const scope = useProvidedScope();
+    const visibilities = useUnit(routes.map((view) => view.route.$isOpened));
 
-    const filtered = activeRoutes.reduce<Route<any>[]>((acc, route) => {
-      return acc.filter((r) => r !== (route as InternalRoute<any>).parent);
-    }, activeRoutes);
+    const openedViews = useMemo(() => {
+      const filtered = routes.filter((view) =>
+        Boolean(getStoreValue(view.route.$isOpened, scope)),
+      );
 
-    const displayedRoute = routes.find(
-      (props) => props.route === filtered.at(-1),
-    );
+      return filtered.reduce(
+        (filtered, view) =>
+          filtered.filter(
+            (r) => r.route !== (view.route as InternalRoute<any>).parent,
+          ),
+        filtered,
+      );
+    }, [visibilities]);
 
-    if (!displayedRoute) {
+    const lastRoute = openedViews.at(-1);
+
+    if (!lastRoute) {
       return NotFound ? <NotFound /> : null;
     }
 
-    return createElement(displayedRoute.view);
+    return createElement(lastRoute.view);
   };
 };

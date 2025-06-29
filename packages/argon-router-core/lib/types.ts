@@ -51,14 +51,14 @@ export interface QueryTracker<ParametersConfig extends RawConfig> {
   exit: EventCallable<{ ignoreParams: string[] } | void>;
 }
 
-type PayloadBase = {
+export type OpenPayloadBase = {
   query?: Query;
   replace?: boolean;
 };
 
 export type RouteOpenedPayload<T> = T extends void
-  ? void | undefined | PayloadBase
-  : { params: T } & PayloadBase;
+  ? void | undefined | OpenPayloadBase
+  : { params: T } & OpenPayloadBase;
 
 export interface Route<T = void> {
   $params: Store<T>;
@@ -170,4 +170,56 @@ export interface InternalRoute<T = any> extends Route<T> {
 export interface VirtualRoute<T = any> extends Route<T> {
   $params: StoreWritable<T>;
   close: EventCallable<void>;
+  cancelled: Event<void>;
+}
+
+export type LocationState = { path: string; query: Query };
+
+export interface RouterControls {
+  $history: StoreWritable<History | null>;
+  $locationState: StoreWritable<LocationState>;
+
+  $query: Store<Query>;
+  $path: Store<string>;
+
+  setHistory: EventCallable<History>;
+
+  navigate: EventCallable<NavigatePayload>;
+
+  back: EventCallable<void>;
+  forward: EventCallable<void>;
+
+  locationUpdated: EventCallable<{
+    pathname: string;
+    query: Query;
+  }>;
+
+  /**
+   * @description Creates query params tracker
+   * @param config Query tacker config
+   * @link https://movpushmov.dev/argon-router/core/track-query.html
+   * @example ```ts
+   * import { parameters } from '@argon-router/core';
+   * import { router } from '@shared/router';
+   * import { createDialog } from '...';
+   *
+   * const dialog = createDialog();
+   * const tracker = router.trackQuery({
+   *   dialog: 'team-member',
+   *   id: parameters.number,
+   * });
+   *
+   * // triggered for:
+   * // /team?dialog=team-member&id=1
+   * // /team?dialog=team-member&id=10000
+   *
+   * // not triggered for:
+   * // /team?dialog=team&id=1
+   * // /team?id=10000
+   * // /team?dialog=team&id=not_number
+   * ```
+   */
+  trackQuery: <T extends RawConfig>(
+    config: Omit<QueryTrackerConfig<T>, 'forRoutes'>,
+  ) => QueryTracker<T>;
 }
