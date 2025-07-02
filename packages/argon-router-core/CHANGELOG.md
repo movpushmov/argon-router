@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/movpushmov/argon-router/compare/v0.9.0...v0.10.0) (2025-07-02)
+
+### Features
+
+- group & withLayout ([b776ef9](https://github.com/movpushmov/argon-router/commit/b776ef91acd62366c66440ffebb858fc6f5576f2))
+
 # [0.9.0](https://github.com/movpushmov/argon-router/compare/v0.8.3...v0.9.0) (2025-07-02)
 
 ### Features
