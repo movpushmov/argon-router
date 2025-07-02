@@ -1,7 +1,8 @@
 export { createRoute } from './create-route';
 export { createRouter } from './create-router';
-export { chainRoute } from './chain-route';
+export { chainRoute, createVirtualRoute } from './chain-route';
 export { createRouterControls } from './create-router-controls';
+export { group } from './group';
 export { parameters } from './const';
 export type {
   Route,

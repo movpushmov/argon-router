@@ -22,18 +22,18 @@ import { CreateRouteViewProps, RouteView } from './types';
  * ```
  */
 export function createRouteView<T>(props: CreateRouteViewProps<T>): RouteView {
-  return {
-    route: props.route,
-    view: () => {
-      const { view: View, layout: Layout } = props;
+  const { layout: Layout, view: View } = props;
 
-      return Layout ? (
+  const view = Layout
+    ? () => (
         <Layout>
           <View />
         </Layout>
-      ) : (
-        <View />
-      );
-    },
+      )
+    : () => <View />;
+
+  return {
+    route: props.route,
+    view,
   };
 }

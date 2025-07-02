@@ -30,7 +30,9 @@ interface ChainRouteProps<T> {
   cancelOn?: Unit<any> | Unit<any>[];
 }
 
-function createVirtualRoute<T>(pending: Store<boolean>): VirtualRoute<T> {
+export function createVirtualRoute<T>(
+  pending: Store<boolean> = createStore(false),
+): VirtualRoute<T> {
   const $params = createStore<T>(null as T);
   const $isOpened = createStore(false);
   const $isPending = pending;

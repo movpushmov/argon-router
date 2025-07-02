@@ -1,7 +1,13 @@
 import { allSettled, createEvent, createStore, fork, sample } from 'effector';
 import { Provider } from 'effector-react';
-import { createRoutesView, Link, RouterProvider } from '../lib';
-import { act } from 'react';
+import {
+  createRoutesView,
+  createRouteView,
+  Link,
+  RouterProvider,
+  withLayout,
+} from '../lib';
+import { act, ReactNode } from 'react';
 import { describe, expect, test } from 'vitest';
 import { chainRoute, createRoute, createRouter } from '@argon-router/core';
 import { createMemoryHistory } from 'history';
@@ -254,5 +260,88 @@ describe('react bindings', () => {
     );
 
     expect(getByTestId('message').textContent).toBe('profile');
+  });
+
+  test('with layout', async () => {
+    const profileRoute = createRoute({ path: '/profile' });
+    const friendsRoute = createRoute({
+      path: '/friends',
+      parent: profileRoute,
+    });
+
+    const authRoute = createRoute({ path: '/auth' });
+
+    const scope = fork();
+    const router = createRouter({
+      routes: [friendsRoute, profileRoute, authRoute],
+    });
+
+    const history = createMemoryHistory();
+
+    history.push('/auth');
+
+    await allSettled(router.setHistory, { scope, params: history });
+
+    const ProfileLayout = (props: { children: ReactNode }) => {
+      return (
+        <>
+          <p data-testid="layout">layout!</p>
+          {props.children}
+        </>
+      );
+    };
+
+    const RoutesView = createRoutesView({
+      routes: [
+        ...withLayout(ProfileLayout, [
+          createRouteView({
+            route: friendsRoute,
+            view: () => <p data-testid="message">friends</p>,
+          }),
+          createRouteView({
+            route: profileRoute,
+            view: () => <p data-testid="message">profile</p>,
+          }),
+        ]),
+        createRouteView({
+          route: authRoute,
+          view: () => <p data-testid="message">auth</p>,
+        }),
+      ],
+      otherwise: () => <p data-testid="message">not found</p>,
+    });
+
+    const { getByTestId, queryByTestId } = render(
+      <Provider value={scope}>
+        <RouterProvider router={router}>
+          <RoutesView />
+        </RouterProvider>
+      </Provider>,
+    );
+
+    await allSettled(friendsRoute.open, { scope, params: undefined });
+
+    await waitFor(() =>
+      expect(getByTestId('layout').textContent).toBe('layout!'),
+    );
+
+    expect(getByTestId('layout').textContent).toBe('layout!');
+    expect(getByTestId('message').textContent).toBe('friends');
+
+    await allSettled(profileRoute.open, { scope, params: undefined });
+
+    await waitFor(() =>
+      expect(getByTestId('layout').textContent).toBe('layout!'),
+    );
+
+    expect(getByTestId('layout').textContent).toBe('layout!');
+    expect(getByTestId('message').textContent).toBe('profile');
+
+    await allSettled(authRoute.open, { scope, params: undefined });
+
+    await waitFor(() => expect(queryByTestId('layout')).toBeFalsy());
+
+    expect(queryByTestId('layout')).toBeFalsy();
+    expect(getByTestId('message').textContent).toBe('auth');
   });
 });

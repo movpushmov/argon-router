@@ -204,7 +204,11 @@ export function trackQueryControlsFactory({
   $query,
   navigate,
 }: Omit<FactoryPayload, '$activeRoutes'>): ControlsFactory {
-  return trackQueryFactory({ $activeRoutes: createStore([]), $query, navigate })
+  return trackQueryFactory({
+    $activeRoutes: createStore([]),
+    $query,
+    navigate,
+  });
 }
 
 export function trackQueryFactory({
