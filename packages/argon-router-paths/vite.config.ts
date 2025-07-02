@@ -4,6 +4,7 @@ import dts from 'vite-plugin-dts';
 import babel from 'vite-plugin-babel';
 
 export default defineConfig({
+  mode: 'production',
   build: {
     outDir: resolve(__dirname, 'dist'),
     lib: {
@@ -12,6 +13,7 @@ export default defineConfig({
       fileName: 'index',
       formats: ['es', 'cjs'],
     },
+    minify: 'terser',
   },
   plugins: [
     babel({ filter: /.[jt]sx?/ }),
