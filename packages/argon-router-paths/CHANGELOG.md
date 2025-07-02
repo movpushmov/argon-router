@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/movpushmov/argon-router/compare/v0.8.3...v0.9.0) (2025-07-02)
+
+### Bug Fixes
+
+- updated handling dummy spaces in path ([f915d5e](https://github.com/movpushmov/argon-router/commit/f915d5ef691c58f046705d0f4f34dcc8bc300536))
+
+### Features
+
+- add createRoute path typings ([f821a8f](https://github.com/movpushmov/argon-router/commit/f821a8fec025ceb6d38b50c7a81be97a90472563))
+- improve bundling ([ad68981](https://github.com/movpushmov/argon-router/commit/ad68981efac0a4882330db2eecdf1d646f14518d))
+
 # [0.8.0](https://github.com/movpushmov/argon-router/compare/v0.7.0...v0.8.0) (2025-05-21)
 
 **Note:** Version bump only for package @argon-router/paths
