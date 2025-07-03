@@ -79,6 +79,20 @@ export default defineConfig({
           { text: 'withLayout', link: '/react/with-layout' },
         ],
       },
+      {
+        text: 'Vue',
+        items: [
+          { text: 'createRouteView', link: '/vue/create-route-view' },
+          {
+            text: 'createLazyRouteView',
+            link: '/vue/create-lazy-route-view',
+          },
+          { text: 'createRoutesView', link: '/vue/create-routes-view' },
+          { text: 'useRouter', link: '/vue/use-router' },
+          { text: 'Link', link: '/vue/link' },
+          { text: 'withLayout', link: '/vue/with-layout' },
+        ],
+      },
     ],
 
     footer: {

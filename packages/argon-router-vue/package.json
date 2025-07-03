@@ -1,18 +1,18 @@
 {
-  "name": "@argon-router/react",
+  "name": "@argon-router/vue",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
   "private": false,
   "version": "0.11.0",
-  "description": "React bindings for argon router",
+  "description": "Vue bindings for argon router",
   "keywords": [
     "effector",
     "argon",
     "router",
     "argon-router",
-    "react"
+    "vue"
   ],
   "author": "movpushmov",
   "homepage": "https://github.com/movpushmov/argon-router#readme",
@@ -47,17 +47,17 @@
     "@argon-router/core": "^0.11.0"
   },
   "devDependencies": {
-    "@babel/preset-react": "^7.26.3",
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vue/test-utils": "^2.4.6",
     "effector": "^23.3.0",
-    "jsdom": "^25.0.1"
+    "effector-vue": "^23.1.1",
+    "jsdom": "^25.0.1",
+    "vue": "^3.5.17"
   },
   "peerDependencies": {
     "effector": ">=23",
-    "effector-react": ">=23",
-    "react": "18 || 19"
+    "effector-vue": ">=23",
+    "vue": ">=3.3"
   }
 }
