@@ -1,53 +1,23 @@
 import { Effect, Event, EventCallable, Store, StoreWritable } from 'effector';
-import {
-  AnyParameter,
-  ArrayParameter,
-  BooleanParameter,
-  NumberParameter,
-  StringParameter,
-} from './const';
+import type { z, ZodType } from 'zod';
 
 import { History } from 'history';
 import { Builder, Parser } from '@argon-router/paths';
-
-type SupportedPrimitive = string | number | Date | boolean;
-
-export type RawConfig = Record<
-  string,
-  | AnyParameter
-  | ArrayParameter
-  | NumberParameter
-  | StringParameter
-  | BooleanParameter
-  | SupportedPrimitive
-  | SupportedPrimitive[]
->;
 
 export type AsyncBundleImport = () => Promise<{ default: any }>;
 
 export type Query = Record<string, string | null | Array<string | null>>;
 
-export type ReadyConfig<T extends RawConfig> = {
-  [K in keyof T]: T[K] extends StringParameter
-    ? string
-    : T[K] extends NumberParameter
-      ? number
-      : T[K] extends ArrayParameter
-        ? string[]
-        : T[K] extends AnyParameter
-          ? string | string[]
-          : never;
-};
-
-export type QueryTrackerConfig<ParametersConfig extends RawConfig> = {
+export type QueryTrackerConfig<ParametersConfig extends ZodType> = {
   forRoutes?: Route<any>[];
   parameters: ParametersConfig;
 };
 
-export interface QueryTracker<ParametersConfig extends RawConfig> {
-  entered: Event<ReadyConfig<ParametersConfig>>;
+export interface QueryTracker<ParametersConfig extends ZodType> {
+  entered: Event<z.infer<ParametersConfig>>;
   exited: Event<void>;
 
+  enter: EventCallable<z.infer<ParametersConfig>>;
   exit: EventCallable<{ ignoreParams: string[] } | void>;
 }
 
@@ -131,7 +101,7 @@ export interface Router {
    * // /team?dialog=team&id=not_number
    * ```
    */
-  trackQuery: <ParametersConfig extends RawConfig>(
+  trackQuery: <ParametersConfig extends ZodType>(
     config: QueryTrackerConfig<ParametersConfig>,
   ) => QueryTracker<ParametersConfig>;
 
@@ -167,10 +137,34 @@ export interface InternalRoute<T = any> extends Route<T> {
   internal: InternalRouteParams<T>;
 }
 
-export interface VirtualRoute<T = any> extends Route<T> {
-  $params: StoreWritable<T>;
+export interface VirtualRoute<T, TransformerResult> {
+  $params: StoreWritable<TransformerResult>;
+
+  $isOpened: StoreWritable<boolean>;
+  $isPending: Store<boolean>;
+
+  open: EventCallable<T>;
+  opened: Event<T>;
+
+  openedOnServer: Event<T>;
+  openedOnClient: Event<T>;
+
   close: EventCallable<void>;
+  closed: Event<void>;
+
   cancelled: Event<void>;
+
+  path: string;
+  beforeOpen?: Effect<any, any, any>[];
+
+  '@@unitShape': () => {
+    params: Store<TransformerResult>;
+    isOpened: Store<boolean>;
+    isPending: Store<boolean>;
+
+    onOpen: EventCallable<T>;
+    onClose: EventCallable<void>;
+  };
 }
 
 export type LocationState = { path: string; query: Query };
@@ -199,14 +193,16 @@ export interface RouterControls {
    * @param config Query tacker config
    * @link https://movpushmov.dev/argon-router/core/track-query.html
    * @example ```ts
-   * import { parameters } from '@argon-router/core';
+   * import { z } from 'zod';
    * import { router } from '@shared/router';
    * import { createDialog } from '...';
    *
    * const dialog = createDialog();
    * const tracker = router.trackQuery({
-   *   dialog: 'team-member',
-   *   id: parameters.number,
+   *  parameters: {
+   *    dialog: z.literal('team-member'),
+   *    id: z.cource.number(),
+   *  },
    * });
    *
    * // triggered for:
@@ -219,7 +215,7 @@ export interface RouterControls {
    * // /team?dialog=team&id=not_number
    * ```
    */
-  trackQuery: <T extends RawConfig>(
+  trackQuery: <T extends ZodType>(
     config: Omit<QueryTrackerConfig<T>, 'forRoutes'>,
   ) => QueryTracker<T>;
 }

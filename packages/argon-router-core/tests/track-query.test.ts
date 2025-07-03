@@ -1,8 +1,9 @@
 import { allSettled, fork } from 'effector';
 import { createMemoryHistory } from 'history';
 import { describe, expect, test } from 'vitest';
-import { createRouter, createRoute, parameters } from '../lib';
+import { createRouter, createRoute } from '../lib';
 import { watchCalls } from './utils';
+import z from 'zod';
 
 async function prepare() {
   const routes = {
@@ -25,9 +26,9 @@ describe('trackQuery', () => {
   test('number parameter', async () => {
     const { router, scope } = await prepare();
     const tracker = router.trackQuery({
-      parameters: {
-        num: parameters.number,
-      },
+      parameters: z.object({
+        num: z.coerce.number(),
+      }),
     });
 
     const enteredCalls = watchCalls(tracker.entered, scope);
@@ -60,9 +61,9 @@ describe('trackQuery', () => {
   test('string parameter', async () => {
     const { router, scope } = await prepare();
     const tracker = router.trackQuery({
-      parameters: {
-        str: parameters.string,
-      },
+      parameters: z.object({
+        str: z.string(),
+      }),
     });
 
     const enteredCalls = watchCalls(tracker.entered, scope);
@@ -94,9 +95,9 @@ describe('trackQuery', () => {
   test('any parameter', async () => {
     const { router, scope } = await prepare();
     const tracker = router.trackQuery({
-      parameters: {
-        any: parameters.any,
-      },
+      parameters: z.object({
+        any: z.any().refine((value) => value !== undefined),
+      }),
     });
 
     const enteredCalls = watchCalls(tracker.entered, scope);
@@ -135,9 +136,9 @@ describe('trackQuery', () => {
   test('array parameter', async () => {
     const { router, scope } = await prepare();
     const tracker = router.trackQuery({
-      parameters: {
-        any: parameters.any,
-      },
+      parameters: z.object({
+        any: z.any().refine((value) => value !== undefined),
+      }),
     });
 
     const enteredCalls = watchCalls(tracker.entered, scope);
@@ -162,9 +163,12 @@ describe('trackQuery', () => {
   test('boolean parameter', async () => {
     const { router, scope } = await prepare();
     const tracker = router.trackQuery({
-      parameters: {
-        bool: parameters.boolean,
-      },
+      parameters: z.object({
+        bool: z
+          .string()
+          .refine((bool) => ['0', '1', 'false', 'true'].includes(bool))
+          .transform((schema) => ['1', 'true'].includes(schema)),
+      }),
     });
 
     const enteredCalls = watchCalls(tracker.entered, scope);
@@ -226,9 +230,9 @@ describe('trackQuery', () => {
   test('for routes', async () => {
     const { router, routes, scope } = await prepare();
     const tracker = router.trackQuery({
-      parameters: {
-        any: parameters.any,
-      },
+      parameters: z.object({
+        any: z.any().refine((value) => value !== undefined),
+      }),
       forRoutes: [routes.app, routes.home],
     });
 
@@ -267,9 +271,9 @@ describe('trackQuery', () => {
   test('exit', async () => {
     const { router, routes, scope } = await prepare();
     const tracker = router.trackQuery({
-      parameters: {
-        any: parameters.any,
-      },
+      parameters: z.object({
+        any: z.any().refine((value) => value !== undefined),
+      }),
       forRoutes: [routes.app, routes.home],
     });
 
@@ -298,9 +302,9 @@ describe('trackQuery', () => {
   test('ignore parameters', async () => {
     const { router, routes, scope } = await prepare();
     const tracker = router.trackQuery({
-      parameters: {
-        any: parameters.any,
-      },
+      parameters: z.object({
+        any: z.any().refine((value) => value !== undefined),
+      }),
       forRoutes: [routes.app, routes.home],
     });
 
@@ -327,5 +331,35 @@ describe('trackQuery', () => {
 
     expect(exitedCalls).toBeCalled();
     expect(scope.getState(router.$query)).toStrictEqual({ uid: 'hi!' });
+  });
+
+  test('enter', async () => {
+    const { router, routes, scope, history } = await prepare();
+    const tracker = router.trackQuery({
+      parameters: z.object({
+        id: z.coerce.number(),
+        role: z.enum(['user', 'admin']),
+      }),
+      forRoutes: [routes.app, routes.home],
+    });
+
+    await allSettled(tracker.enter, { params: { id: 0, role: 'user' }, scope });
+
+    expect(scope.getState(router.$query)).toStrictEqual({
+      id: '0',
+      role: 'user',
+    });
+    expect(history.location.search).toBe('?id=0&role=user');
+
+    await allSettled(tracker.enter, {
+      params: { id: 1, role: 'admin' },
+      scope,
+    });
+
+    expect(scope.getState(router.$query)).toStrictEqual({
+      id: '1',
+      role: 'admin',
+    });
+    expect(history.location.search).toBe('?id=1&role=admin');
   });
 });

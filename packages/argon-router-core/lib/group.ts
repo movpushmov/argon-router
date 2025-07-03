@@ -1,5 +1,5 @@
 import { sample } from 'effector';
-import { createVirtualRoute } from './chain-route';
+import { createVirtualRoute } from './create-virtual-route';
 import type { Route } from './types';
 import { not, or } from 'patronum';
 
@@ -22,8 +22,9 @@ import { not, or } from 'patronum';
  * ```
  */
 export function group(routes: Route<any>[]) {
-  const $isPending = or(...routes.map((route) => route.$isPending));
-  const virtual = createVirtualRoute<void>($isPending);
+  const virtual = createVirtualRoute({
+    $isPending: or(...routes.map((route) => route.$isPending)),
+  });
 
   sample({
     clock: routes.map((route) => route.$isOpened),

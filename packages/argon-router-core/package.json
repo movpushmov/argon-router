@@ -49,7 +49,8 @@
   },
   "devDependencies": {
     "@types/history": "^4.7.11",
-    "query-string": "^9.1.1"
+    "query-string": "^9.1.1",
+    "zod": "^3.25.71"
   },
   "dependencies": {
     "@argon-router/paths": "^0.10.0"

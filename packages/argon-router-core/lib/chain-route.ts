@@ -1,14 +1,4 @@
-import {
-  createEffect,
-  createEvent,
-  createStore,
-  Effect,
-  EventCallable,
-  sample,
-  split,
-  Store,
-  Unit,
-} from 'effector';
+import { createEffect, Effect, EventCallable, sample, Unit } from 'effector';
 import {
   AsyncBundleImport,
   OpenPayloadBase,
@@ -16,6 +6,7 @@ import {
   RouteOpenedPayload,
   VirtualRoute,
 } from './types';
+import { createVirtualRoute } from './create-virtual-route';
 
 type BeforeOpenUnit<T> =
   | (T extends void
@@ -28,76 +19,6 @@ interface ChainRouteProps<T> {
   beforeOpen: BeforeOpenUnit<T> | BeforeOpenUnit<T>[];
   openOn?: Unit<any> | Unit<any>[];
   cancelOn?: Unit<any> | Unit<any>[];
-}
-
-export function createVirtualRoute<T>(
-  pending: Store<boolean> = createStore(false),
-): VirtualRoute<T> {
-  const $params = createStore<T>(null as T);
-  const $isOpened = createStore(false);
-  const $isPending = pending;
-
-  const open = createEvent<RouteOpenedPayload<T>>();
-
-  const opened = createEvent<RouteOpenedPayload<T>>();
-  const openedOnServer = createEvent<RouteOpenedPayload<T>>();
-  const openedOnClient = createEvent<RouteOpenedPayload<T>>();
-
-  const close = createEvent();
-  const closed = createEvent();
-
-  const cancelled = createEvent();
-
-  sample({
-    clock: open,
-    target: opened,
-  });
-
-  split({
-    source: opened,
-    match: () => (typeof window === 'undefined' ? 'server' : 'client'),
-    cases: {
-      server: openedOnServer,
-      client: openedOnClient,
-    },
-  });
-
-  sample({
-    clock: close,
-    target: closed,
-  });
-
-  sample({
-    clock: [opened.map(() => true), closed.map(() => false)],
-    target: $isOpened,
-  });
-
-  return {
-    $params,
-    $isOpened,
-    $isPending,
-
-    open,
-    opened,
-    openedOnClient,
-    openedOnServer,
-
-    close,
-    closed,
-
-    cancelled,
-
-    // @ts-expect-error emulated path for virtual route
-    path: null,
-
-    '@@unitShape': () => ({
-      params: $params,
-      isOpened: $isOpened,
-      isPending: $isPending,
-
-      onOpen: open,
-    }),
-  };
 }
 
 /**
@@ -141,7 +62,9 @@ export function createVirtualRoute<T>(
  * const postLoadedRoute = chainRoute({ route: authorizedRoute, ... });
  * ```
  */
-export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
+export function chainRoute<T>(
+  props: ChainRouteProps<T>,
+): VirtualRoute<RouteOpenedPayload<T>, T> {
   const { route, beforeOpen, openOn, cancelOn } = props;
 
   let asyncImport: AsyncBundleImport;
@@ -157,7 +80,17 @@ export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
     }
   });
 
-  const virtualRoute = createVirtualRoute<T>(openFx.pending);
+  const transformer = (payload: RouteOpenedPayload<T>): T => {
+    if (!payload) {
+      return null as T;
+    }
+
+    return 'params' in payload ? payload.params : (null as T);
+  };
+
+  const virtualRoute = createVirtualRoute<RouteOpenedPayload<T>, T>({
+    transformer,
+  });
 
   sample({
     clock: route.opened,
@@ -166,17 +99,15 @@ export function chainRoute<T>(props: ChainRouteProps<T>): VirtualRoute<T> {
 
   sample({
     clock: route.opened,
-    fn: (payload) =>
-      (payload && 'params' in payload ? payload.params : null) as T,
+    fn: transformer,
     target: virtualRoute.$params,
   });
 
   if (openOn) {
-    // @ts-expect-error ...
     sample({
-      clock: openOn,
-      source: { params: virtualRoute.$params },
-      fn: ({ params }) => ({ params }) as unknown as RouteOpenedPayload<T>,
+      clock: openOn as Unit<any>[],
+      source: virtualRoute.$params,
+      fn: (params) => params as unknown as RouteOpenedPayload<T>,
       target: virtualRoute.open,
     });
   }

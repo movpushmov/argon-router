@@ -62,6 +62,7 @@ export default defineConfig({
           { text: 'trackQuery', link: '/core/track-query' },
           { text: 'chainRoute', link: '/core/chain-route' },
           { text: 'group', link: '/core/group' },
+          { text: 'createVirtualRoute', link: '/core/create-virtual-route' },
         ],
       },
       {
