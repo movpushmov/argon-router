@@ -3,7 +3,7 @@ import { createMemoryHistory } from 'history';
 import { describe, expect, test } from 'vitest';
 import { createRouter, createRoute } from '../lib';
 import { watchCalls } from './utils';
-import z from 'zod';
+import z from 'zod/v4';
 
 async function prepare() {
   const routes = {

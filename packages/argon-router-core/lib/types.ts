@@ -1,5 +1,5 @@
 import { Effect, Event, EventCallable, Store, StoreWritable } from 'effector';
-import type { z, ZodType } from 'zod';
+import type { z, ZodType } from 'zod/v4';
 
 import { History } from 'history';
 import { Builder, Parser } from '@argon-router/paths';
@@ -193,7 +193,7 @@ export interface RouterControls {
    * @param config Query tacker config
    * @link https://movpushmov.dev/argon-router/core/track-query.html
    * @example ```ts
-   * import { z } from 'zod';
+   * import { z } from 'zod/v4';
    * import { router } from '@shared/router';
    * import { createDialog } from '...';
    *
