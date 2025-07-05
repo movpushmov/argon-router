@@ -12,7 +12,7 @@ import {
   QueryTrackerConfig,
   Route,
 } from './types';
-import type { z, ZodType } from 'zod';
+import type { z, ZodType } from 'zod/v4';
 
 function isForRouteActive(forRoutes: Route<any>[], activeRoutes: Route<any>[]) {
   for (const route of forRoutes) {
