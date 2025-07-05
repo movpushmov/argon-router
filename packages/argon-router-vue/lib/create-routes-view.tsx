@@ -1,10 +1,10 @@
-import { ComponentType, createElement, useMemo } from 'react';
+import { useUnit } from 'effector-vue/composition';
 import { RouteView } from './types';
-import { useUnit } from 'effector-react';
+import { Component, computed, defineComponent, h } from 'vue';
 
 interface CreateRoutesViewProps {
   routes: RouteView[];
-  otherwise?: ComponentType;
+  otherwise?: Component;
 }
 
 /**
@@ -31,26 +31,38 @@ interface CreateRoutesViewProps {
  * ```
  */
 export const createRoutesView = (props: CreateRoutesViewProps) => {
-  const { routes, otherwise: NotFound } = props;
+  return defineComponent({
+    setup() {
+      console.log(props);
 
-  return () => {
-    const visibilities = useUnit(routes.map((view) => view.route.$isOpened));
-
-    const openedViews = useMemo(() => {
-      const filtered = routes.filter((_, i) => visibilities[i]);
-
-      return filtered.reduce(
-        (result, view) => result.filter((r) => r.route !== view.route.parent),
-        filtered,
+      const visibilities = useUnit(
+        props.routes.map((view) => view.route.$isOpened),
       );
-    }, [visibilities]);
 
-    const lastRoute = openedViews.at(-1);
+      const openedViews = computed(() => {
+        const filtered = props.routes.filter(
+          (view) => visibilities[props.routes.indexOf(view)],
+        );
 
-    if (!lastRoute) {
-      return NotFound ? <NotFound /> : null;
-    }
+        return filtered.reduce(
+          (result, view) => result.filter((r) => r.route !== view.route.parent),
+          filtered,
+        );
+      });
 
-    return createElement(lastRoute.view);
-  };
+      const lastRoute = computed(() => openedViews.value.at(-1));
+
+      if (!lastRoute.value) {
+        const { otherwise } = props;
+
+        return otherwise ? () => h(otherwise) : null;
+      }
+
+      const { view } = lastRoute.value;
+
+      console.log(view);
+
+      return () => h(view);
+    },
+  });
 };
