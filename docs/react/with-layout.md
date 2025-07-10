@@ -19,11 +19,13 @@ import { routes } from '@shared/routing';
 
 import { AuthLayout } from '@layouts/auth';
 
-export const RoutesView = createRoutesView([
-  ...withLayout(AuthLayout, [
-    createRouteView({ route: routes.signIn, view: SignInScreen }),
-    createRouteView({ route: routes.signUp, view: SignUpScreen }),
-  ]),
-  createRouteView({ route: routes.profile, view: ProfileScreen }),
-]);
+export const RoutesView = createRoutesView({
+  routes: [
+    ...withLayout(AuthLayout, [
+      createRouteView({ route: routes.signIn, view: SignInScreen }),
+      createRouteView({ route: routes.signUp, view: SignUpScreen }),
+    ]),
+    createRouteView({ route: routes.profile, view: ProfileScreen }),
+  ],
+});
 ```
