@@ -1,0 +1,21 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "modules": false,
+        "targets": "> 0.25%, not dead"
+      }
+    ],
+    "@babel/preset-typescript"
+  ],
+  "plugins": [
+    [
+      "effector/babel-plugin",
+      {
+        "factories": ["@effector-reform/core"],
+        "addNames": true
+      }
+    ]
+  ]
+}
