@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.1](https://github.com/movpushmov/argon-router/compare/v0.11.0...v0.11.1) (2025-07-03)
+
+### Bug Fixes
+
+- improve routes view & zod/v4 ([fc66011](https://github.com/movpushmov/argon-router/commit/fc66011abdc728616feb9061e186956d69d0a480))
+
+# [0.11.0](https://github.com/movpushmov/argon-router/compare/v0.10.1...v0.11.0) (2025-07-03)
+
+**Note:** Version bump only for package @argon-router/react
+
+## [0.10.1](https://github.com/movpushmov/argon-router/compare/v0.10.0...v0.10.1) (2025-07-03)
+
+**Note:** Version bump only for package @argon-router/react
+
+# [0.10.0](https://github.com/movpushmov/argon-router/compare/v0.9.0...v0.10.0) (2025-07-02)
+
+### Features
+
+- group & withLayout ([b776ef9](https://github.com/movpushmov/argon-router/commit/b776ef91acd62366c66440ffebb858fc6f5576f2))
+
+# [0.9.0](https://github.com/movpushmov/argon-router/compare/v0.8.3...v0.9.0) (2025-07-02)
+
+### Features
+
+- improve bundling ([ad68981](https://github.com/movpushmov/argon-router/commit/ad68981efac0a4882330db2eecdf1d646f14518d))
+
 ## [0.8.3](https://github.com/movpushmov/argon-router/compare/v0.8.2...v0.8.3) (2025-05-27)
 
 **Note:** Version bump only for package @argon-router/react

@@ -4,6 +4,7 @@ import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  mode: 'production',
   build: {
     lib: {
       entry: resolve(__dirname, 'lib/index.ts'),
@@ -16,6 +17,7 @@ export default defineConfig({
         'effector',
         'effector-react',
         'react',
+        'react/jsx-runtime',
         '@effector-reform/core',
       ],
       output: {
@@ -24,9 +26,12 @@ export default defineConfig({
           effector: 'effector',
           'effector-react': 'effector-react',
           '@effector-reform/core': '@effector-reform/core',
+          'react/jsx-runtime': 'react/jsx-runtime',
         },
       },
     },
+
+    minify: 'terser',
   },
   plugins: [
     react(),

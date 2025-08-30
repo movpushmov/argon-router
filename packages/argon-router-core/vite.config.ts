@@ -4,6 +4,7 @@ import dts from 'vite-plugin-dts';
 import babel from 'vite-plugin-babel';
 
 export default defineConfig({
+  mode: 'production',
   build: {
     outDir: resolve(__dirname, 'dist'),
     lib: {
@@ -13,15 +14,22 @@ export default defineConfig({
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
-      external: ['effector', 'patronum', '@effector-reform/core'],
+      external: [
+        'effector',
+        'patronum',
+        '@effector-reform/core',
+        'query-string',
+      ],
       output: {
         globals: {
           effector: 'effector',
           patronum: 'patronum',
+          'query-string': 'query-string',
           '@effector-reform/core': '@effector-reform/core',
         },
       },
     },
+    minify: 'terser',
   },
   plugins: [
     babel({ filter: /.[jt]sx?/ }),

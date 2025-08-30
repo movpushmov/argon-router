@@ -1,4 +1,4 @@
-import { allSettled, fork } from 'effector';
+import { allSettled, createEffect, fork } from 'effector';
 import { describe, expect, test, vi } from 'vitest';
 import { createRoute, createRouter } from '../lib';
 import { createMemoryHistory } from 'history';
@@ -153,5 +153,34 @@ describe('router', () => {
     expect(scope.getState(router.$activeRoutes)[0]).toEqual(route1);
     expect(scope.getState(route1.$isOpened)).toBeTruthy();
     expect(scope.getState(route2.$isOpened)).toBeFalsy();
+  });
+
+  test('beforeOpen on route', async () => {
+    const fn1 = vi.fn();
+    const fn2 = vi.fn();
+
+    const scope = fork();
+
+    const route1 = createRoute({
+      path: '/step1',
+      beforeOpen: [createEffect(fn1)],
+    });
+
+    const route2 = createRoute({
+      path: '/step2',
+      beforeOpen: [createEffect(fn2)],
+    });
+
+    const router = createRouter({ routes: [route1, route2] });
+    const history = createMemoryHistory({ initialEntries: ['/step1'] });
+
+    await allSettled(router.setHistory, { scope, params: history });
+
+    expect(fn1).toBeCalled();
+
+    history.push('/step2');
+    await allSettled(scope);
+
+    expect(fn2).toBeCalled();
   });
 });

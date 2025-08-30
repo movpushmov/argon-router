@@ -1,4 +1,5 @@
 import {
+  attach,
   createEffect,
   createEvent,
   createStore,
@@ -57,33 +58,23 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
 ): Route<Params> {
   let asyncImport: AsyncBundleImport;
 
-  type OpenPayload = RouteOpenedPayload<Params>;
+  const openFx = createEffect<OpenPayload, OpenPayload>(async (payload) => {
+    await waitForAsyncBundleFx();
+    await beforeOpenFx();
 
-  const waitForAsyncBundleFx = createEffect(() => asyncImport?.());
+    const parent = config.parent as InternalRoute | undefined;
 
-  const beforeOpenFx = createEffect(async () => {
-    for (const fx of config.beforeOpen ?? []) {
-      await fx();
+    if (parent) {
+      await parent.internal.openFx({
+        ...(payload ?? { params: {} }),
+        navigate: false,
+      });
     }
+
+    return payload;
   });
 
-  const openFx = createEffect<OpenPayload, RouteOpenedPayload<Params>>(
-    async (payload: OpenPayload) => {
-      await waitForAsyncBundleFx();
-      await beforeOpenFx();
-
-      const parent = config.parent as InternalRoute | undefined;
-
-      if (parent) {
-        await parent.internal.openFx({
-          ...(payload ?? { params: {} }),
-          navigate: false,
-        });
-      }
-
-      return payload;
-    },
-  );
+  type OpenPayload = RouteOpenedPayload<Params>;
 
   const $params = createStore<Params>({} as Params);
 
@@ -101,16 +92,32 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
 
   const closed = createEvent();
 
+  const waitForAsyncBundleFx = createEffect(() => asyncImport?.());
+
+  const beforeOpenFx = createEffect(async () => {
+    for (const fx of config.beforeOpen ?? []) {
+      await fx();
+    }
+  });
+
+  const navigatedFx = attach({ effect: openFx });
+
+  const defaultParams = {} as Params;
+
   sample({
     clock: open,
     target: openFx,
   });
 
-  const defaultParams = {} as Params;
-
   sample({
     clock: navigated,
-    fn: (payload): Params => {
+    fn: (payload) => ({ navigate: false, ...payload }),
+    target: navigatedFx,
+  });
+
+  sample({
+    clock: navigatedFx.doneData,
+    fn: (payload) => {
       if (!payload) {
         return defaultParams;
       }
@@ -120,8 +127,14 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
     target: $params,
   });
 
+  sample({
+    clock: navigatedFx.failData,
+    fn: () => defaultParams,
+    target: $params,
+  });
+
   split({
-    source: navigated,
+    source: navigatedFx.doneData,
     match: () => (typeof window === 'undefined' ? 'server' : 'client'),
     cases: {
       server: openedOnServer,

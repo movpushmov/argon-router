@@ -3,7 +3,7 @@
 Tracking query is very popular case. Argon router gives you instrument with name
 `query tracker`, which allows you to watch query & controls it without headache.
 
-Allowed `parameters` types: `number`, `string`, `boolean`, `array`, `string literal`, `any`
+Now query tracker supports only `zod` schema. You must install zod manually.
 
 ### Basic example (persistent dialog)
 
@@ -11,11 +11,14 @@ Allowed `parameters` types: `number`, `string`, `boolean`, `array`, `string lite
 // settings/model/root.ts
 
 import { router } from '@shared/router';
-import { createDialog } from '...';
+import { createDialog } from '@shared/libs/dialogs';
+import { z } from 'zod/v4';
 
 const dialog = createDialog();
 const tracker = router.trackQuery({
-  dialog: 'age',
+  parameters: z.object({
+    dialog: z.literal('age'),
+  }),
 });
 
 sample({
@@ -41,12 +44,16 @@ sample({
 
 import { parameters } from '@argon-router/core';
 import { router } from '@shared/router';
-import { createDialog } from '...';
+import { createDialog } from '@shared/libs/dialogs';
+import { z } from 'zod/v4';
 
 const dialog = createDialog();
 const tracker = router.trackQuery({
-  dialog: 'team-member',
-  id: parameters.number,
+  parameters: z.object({
+    dialog: z.literal('team-member'),
+    // be careful: all params in query is string by default
+    id: z.cource.number(),
+  }),
 });
 
 // triggered for:

@@ -2,7 +2,8 @@ export { createRoute } from './create-route';
 export { createRouter } from './create-router';
 export { chainRoute } from './chain-route';
 export { createRouterControls } from './create-router-controls';
-export { parameters } from './const';
+export { group } from './group';
+export { createVirtualRoute } from './create-virtual-route';
 export type {
   Route,
   Router,
@@ -12,7 +13,5 @@ export type {
   NavigatePayload,
   QueryTracker,
   QueryTrackerConfig,
-  ReadyConfig,
-  RawConfig,
   VirtualRoute,
 } from './types';

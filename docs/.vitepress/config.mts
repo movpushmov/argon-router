@@ -55,9 +55,14 @@ export default defineConfig({
         items: [
           { text: 'createRoute', link: '/core/create-route' },
           { text: 'createRouter', link: '/core/create-router' },
-          { text: 'createRouterControls', link: '/core/create-router-controls' },
+          {
+            text: 'createRouterControls',
+            link: '/core/create-router-controls',
+          },
           { text: 'trackQuery', link: '/core/track-query' },
           { text: 'chainRoute', link: '/core/chain-route' },
+          { text: 'group', link: '/core/group' },
+          { text: 'createVirtualRoute', link: '/core/create-virtual-route' },
         ],
       },
       {
@@ -71,6 +76,7 @@ export default defineConfig({
           { text: 'createRoutesView', link: '/react/create-routes-view' },
           { text: 'useRouter', link: '/react/use-router' },
           { text: 'Link', link: '/react/link' },
+          { text: 'withLayout', link: '/react/with-layout' },
         ],
       },
     ],

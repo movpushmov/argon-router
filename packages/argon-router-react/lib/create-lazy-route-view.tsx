@@ -31,23 +31,24 @@ export function createLazyRouteView<T>(
 ): RouteView {
   (props.route as InternalRoute<T>).internal.setAsyncImport(props.view);
   const View = lazy(props.view);
+  const { layout: Layout, fallback: Fallback = () => <></> } = props;
 
-  return {
-    route: props.route,
-    view: () => {
-      const { layout: Layout, fallback: Fallback = () => <></> } = props;
-
-      return Layout ? (
+  const view = Layout
+    ? () => (
         <Layout>
           <Suspense fallback={<Fallback />}>
             <View />
           </Suspense>
         </Layout>
-      ) : (
+      )
+    : () => (
         <Suspense fallback={<Fallback />}>
           <View />
         </Suspense>
       );
-    },
+
+  return {
+    route: props.route,
+    view,
   };
 }
