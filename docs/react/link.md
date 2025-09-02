@@ -12,6 +12,16 @@ Navigates user to provided route on click. Has similar props with `<a>` element 
 - `type`: `T`
 - `required`: if route has params: `yes` otherwise: `no`
 
+#### `query`
+
+- `type`: Query
+- `required`: no
+
+#### `replace`
+
+- `type`: boolean
+- `required`: no
+
 ### Example
 
 ```tsx

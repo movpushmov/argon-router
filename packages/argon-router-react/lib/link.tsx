@@ -34,7 +34,7 @@ export const Link: ForwardedLink = forwardRef<
   HTMLAnchorElement,
   LinkProps<any>
 >((props, ref) => {
-  const { to, params, onClick, ...anchorProps } = props;
+  const { to, params, onClick, replace, query, ...anchorProps } = props;
 
   const { mappedRoutes } = useRouterContext();
   const target = mappedRoutes.find(({ route }) => route === to);
@@ -72,7 +72,7 @@ export const Link: ForwardedLink = forwardRef<
 
         e.preventDefault();
 
-        onOpen({ params: params || {} } as RouteOpenedPayload<any>);
+        onOpen({ params: params || {}, replace, query } as RouteOpenedPayload<any>);
       }}
     />
   );

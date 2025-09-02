@@ -1,4 +1,4 @@
-import { Route } from '@argon-router/core';
+import { Route, OpenPayloadBase } from '@argon-router/core';
 import { AnchorHTMLAttributes, ComponentType, FC, ReactNode } from 'react';
 
 interface CreateBaseRouteViewProps<T> {
@@ -26,7 +26,7 @@ type AnchorProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'>;
 type BaseLinkProps<Params> = {
   to: Route<Params>;
   children?: ReactNode;
-} & AnchorProps;
+} & AnchorProps & OpenPayloadBase;
 
 export type LinkProps<Params> = Params extends
   | Record<string, never>
