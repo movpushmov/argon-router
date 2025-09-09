@@ -107,7 +107,7 @@ export function chainRoute<T>(
     sample({
       clock: openOn as Unit<any>[],
       source: virtualRoute.$params,
-      fn: (params) => params as unknown as RouteOpenedPayload<T>,
+      fn: (params) => ({ params }) as unknown as RouteOpenedPayload<T>,
       target: virtualRoute.open,
     });
   }
