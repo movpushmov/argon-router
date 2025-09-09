@@ -60,5 +60,6 @@ describe('chained routes', () => {
     });
 
     expect(scope.getState(virtual.$isOpened)).toBeTruthy();
+    expect(scope.getState(virtual.$params)).toStrictEqual({ id: '1' });
   });
 });
