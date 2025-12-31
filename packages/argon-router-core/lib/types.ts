@@ -1,15 +1,62 @@
-import { Effect, Event, EventCallable, Store, StoreWritable } from 'effector';
+import type {
+  Effect,
+  Event,
+  EventCallable,
+  Store,
+  StoreWritable,
+} from 'effector';
+
 import type { z, ZodType } from 'zod/v4';
 
-import { History } from 'history';
-import { Builder, Parser } from '@argon-router/paths';
+import type { Builder, Parser } from '@argon-router/paths';
+import type { RouterAdapter } from './adapters';
 
 export type AsyncBundleImport = () => Promise<{ default: any }>;
 
 export type Query = Record<string, string | null | Array<string | null>>;
 
+export interface PathlessRoute<T extends object | void = void> {
+  '@@type': 'pathless-route';
+
+  $params: Store<T>;
+
+  $isOpened: Store<boolean>;
+  $isPending: Store<boolean>;
+
+  open: EventCallable<RouteOpenedPayload<T>>;
+
+  opened: Event<RouteOpenedPayload<T>>;
+  openedOnServer: Event<RouteOpenedPayload<T>>;
+  openedOnClient: Event<RouteOpenedPayload<T>>;
+
+  closed: Event<void>;
+
+  parent?: PathRoute<any> | PathlessRoute<any>;
+  beforeOpen?: Effect<any, any, any>[];
+
+  '@@unitShape': () => {
+    params: Store<T>;
+    isOpened: Store<boolean>;
+    isPending: Store<boolean>;
+
+    onOpen: EventCallable<RouteOpenedPayload<T>>;
+  };
+}
+
+export interface PathRoute<T extends object | void = void>
+  extends Omit<PathlessRoute<T>, '@@type'> {
+  '@@type': 'path-route';
+
+  path: string;
+}
+
+export type Route<T extends object | void = void> =
+  | PathRoute<T>
+  | PathlessRoute<T>;
+
 export type QueryTrackerConfig<ParametersConfig extends ZodType> = {
   forRoutes?: Route<any>[];
+  check?: Event<void>;
   parameters: ParametersConfig;
 };
 
@@ -27,35 +74,8 @@ export type OpenPayloadBase = {
 };
 
 export type RouteOpenedPayload<T> = T extends void
-  ? void | undefined | OpenPayloadBase
+  ? void | OpenPayloadBase
   : { params: T } & OpenPayloadBase;
-
-export interface Route<T = void> {
-  $params: Store<T>;
-
-  $isOpened: Store<boolean>;
-  $isPending: Store<boolean>;
-
-  open: EventCallable<RouteOpenedPayload<T>>;
-
-  opened: Event<RouteOpenedPayload<T>>;
-  openedOnServer: Event<RouteOpenedPayload<T>>;
-  openedOnClient: Event<RouteOpenedPayload<T>>;
-
-  closed: Event<void>;
-
-  path: string;
-  parent?: Route<any>;
-  beforeOpen?: Effect<any, any, any>[];
-
-  '@@unitShape': () => {
-    params: Store<T>;
-    isOpened: Store<boolean>;
-    isPending: Store<boolean>;
-
-    onOpen: EventCallable<RouteOpenedPayload<T>>;
-  };
-}
 
 export type NavigatePayload = {
   query: Query;
@@ -63,18 +83,26 @@ export type NavigatePayload = {
   replace?: boolean;
 };
 
+export type MappedRoute = {
+  route: InternalRoute<any>;
+  path: string;
+  build: Builder<any>;
+  parse: Parser<any>;
+};
+
 export interface Router {
+  '@@type': 'router';
+
   $query: Store<Query>;
   $path: Store<string>;
+  $history: Store<RouterAdapter | null>;
   $activeRoutes: Store<Route<any>[]>;
 
   back: EventCallable<void>;
   forward: EventCallable<void>;
   navigate: EventCallable<NavigatePayload>;
 
-  setHistory: EventCallable<History>;
-
-  routes: Route<any>[];
+  setHistory: EventCallable<RouterAdapter>;
 
   /**
    * @description Creates query params tracker
@@ -105,12 +133,15 @@ export interface Router {
     config: QueryTrackerConfig<ParametersConfig>,
   ) => QueryTracker<ParametersConfig>;
 
-  mappedRoutes: {
-    route: Route<any>;
-    path: string;
-    build: Builder<any>;
-    parse: Parser<any>;
-  }[];
+  ownRoutes: MappedRoute[];
+  knownRoutes: MappedRoute[];
+
+  registerRoute: (
+    route:
+      | PathRoute<any>
+      | { path: string; route: PathlessRoute<any> }
+      | Router,
+  ) => void;
 
   '@@unitShape': () => {
     query: Store<Query>;
@@ -123,21 +154,47 @@ export interface Router {
   };
 }
 
+export interface InternalRouterProps {
+  parent: Router | null;
+  base?: string;
+}
+
+export interface InternalRouter extends Router {
+  internal: InternalRouterProps;
+}
+
 type InternalOpenedPayload<T> = RouteOpenedPayload<T> & { navigate?: boolean };
 
 export interface InternalRouteParams<T> {
   close: EventCallable<void>;
   navigated: EventCallable<RouteOpenedPayload<T>>;
   openFx: Effect<InternalOpenedPayload<T>, InternalOpenedPayload<T>, Error>;
+  forceOpenParentFx: Effect<
+    InternalOpenedPayload<T>,
+    InternalOpenedPayload<T>,
+    Error
+  >;
 
   setAsyncImport: (value: AsyncBundleImport) => void;
 }
 
-export interface InternalRoute<T = any> extends Route<T> {
+export interface InternalPathlessRoute<T extends object | void = any>
+  extends PathlessRoute<T> {
   internal: InternalRouteParams<T>;
 }
 
+export interface InternalPathRoute<T extends object | void = any>
+  extends PathRoute<T> {
+  internal: InternalRouteParams<T>;
+}
+
+export type InternalRoute<T extends object | void = any> =
+  | InternalPathRoute<T>
+  | InternalPathlessRoute<T>;
+
 export interface VirtualRoute<T, TransformerResult> {
+  '@@type': 'pathless-route';
+
   $params: StoreWritable<TransformerResult>;
 
   $isOpened: StoreWritable<boolean>;
@@ -170,13 +227,13 @@ export interface VirtualRoute<T, TransformerResult> {
 export type LocationState = { path: string; query: Query };
 
 export interface RouterControls {
-  $history: StoreWritable<History | null>;
+  $history: StoreWritable<RouterAdapter | null>;
   $locationState: StoreWritable<LocationState>;
 
   $query: Store<Query>;
   $path: Store<string>;
 
-  setHistory: EventCallable<History>;
+  setHistory: EventCallable<RouterAdapter>;
 
   navigate: EventCallable<NavigatePayload>;
 

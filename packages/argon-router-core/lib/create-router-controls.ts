@@ -1,10 +1,9 @@
 import {
   attach,
-  createEffect,
   createEvent,
   createStore,
   sample,
-  scopeBind,
+  type Subscription,
 } from 'effector';
 
 import queryString from 'query-string';
@@ -15,8 +14,10 @@ import type {
   Query,
   RouterControls,
 } from './types';
-import type { History } from 'history';
 import { trackQueryControlsFactory } from './track-query';
+import type { RouterAdapter } from './adapters';
+
+import { createAsyncAction } from 'effector-action';
 
 /**
  * @description Creates argon router controls
@@ -48,16 +49,21 @@ import { trackQueryControlsFactory } from './track-query';
  * ```
  */
 export function createRouterControls(): RouterControls {
-  const $history = createStore<History | null>(null, { serialize: 'ignore' });
+  const $history = createStore<RouterAdapter | null>(null, {
+    serialize: 'ignore',
+  });
+
   const $locationState = createStore<LocationState>({
     query: {},
     path: null as unknown as string,
   });
 
+  const $subscription = createStore<Subscription | null>(null);
+
   const $query = $locationState.map((state) => state.query);
   const $path = $locationState.map((state) => state.path);
 
-  const setHistory = createEvent<History>();
+  const setHistory = createEvent<RouterAdapter>();
   const navigate = createEvent<NavigatePayload>();
 
   const back = createEvent();
@@ -88,24 +94,61 @@ export function createRouterControls(): RouterControls {
     },
   });
 
-  const subscribeHistoryFx = createEffect((history: History) => {
-    const historyLocationUpdated = scopeBind(locationUpdated);
+  const subscribeHistoryFx = createAsyncAction({
+    target: {
+      locationUpdated,
+      $subscription,
+    },
+    source: { $subscription },
+    fn: async (target, getSource, history: RouterAdapter | null) => {
+      if (!history) {
+        throw Error(
+          'Cannot initialize router controls with empty history adapter. Please provide some provider or check your code for passing of nullable value',
+        );
+      }
 
-    historyLocationUpdated({
-      pathname: history.location.pathname,
-      query: { ...queryString.parse(history.location.search) },
-    });
+      const source = await getSource();
 
-    if (!history) {
-      throw new Error();
-    }
+      if (source.subscription) {
+        source.subscription.unsubscribe();
+      }
 
-    history.listen(({ location }) => {
-      historyLocationUpdated({
-        pathname: location.pathname,
-        query: { ...queryString.parse(location.search) },
+      target.locationUpdated({
+        pathname: history.location.pathname,
+        query: { ...queryString.parse(history.location.search) },
       });
-    });
+
+      target.$subscription(
+        history.listen((location) => {
+          target.locationUpdated({
+            pathname: location.pathname,
+            query: { ...queryString.parse(location.search) },
+          });
+        }),
+      );
+    },
+  });
+
+  const goBackFx = attach({
+    source: $history,
+    effect: (history) => {
+      if (!history) {
+        throw new Error('history not found');
+      }
+
+      history.goBack();
+    },
+  });
+
+  const goForwardFx = attach({
+    source: $history,
+    effect: (history) => {
+      if (!history) {
+        throw new Error('history not found');
+      }
+
+      history.goForward();
+    },
   });
 
   sample({
@@ -133,6 +176,16 @@ export function createRouterControls(): RouterControls {
     source: $path,
     fn: (path, payload) => ({ path, ...payload }),
     target: navigateFx,
+  });
+
+  sample({
+    clock: back,
+    target: goBackFx,
+  });
+
+  sample({
+    clock: forward,
+    target: goForwardFx,
   });
 
   return {

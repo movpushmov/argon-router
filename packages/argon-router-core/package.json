@@ -45,10 +45,11 @@
   "peerDependencies": {
     "effector": ">=23",
     "patronum": ">=2.2",
-    "query-string": "^9.1.1"
+    "query-string": "^9.1.1",
+    "effector-action": ">=1.2.2"
   },
   "devDependencies": {
-    "@types/history": "^4.7.11",
+    "@types/history": "^5.0.0",
     "query-string": "^9.1.1",
     "zod": "^3.25.71"
   },

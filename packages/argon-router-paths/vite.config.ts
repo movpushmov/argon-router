@@ -9,7 +9,6 @@ export default defineConfig({
     outDir: resolve(__dirname, 'dist'),
     lib: {
       entry: resolve(__dirname, 'lib/index.ts'),
-      name: '@effector-reform/paths',
       fileName: 'index',
       formats: ['es', 'cjs'],
     },

@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { Router } from '@argon-router/core';
+import type { ReactNode } from 'react';
+import type { Router } from '@argon-router/core';
 import { RouterProviderContext } from './context';
 
 interface RouterProviderProps {

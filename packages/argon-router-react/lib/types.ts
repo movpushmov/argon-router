@@ -1,34 +1,38 @@
-import { Route, OpenPayloadBase } from '@argon-router/core';
-import { AnchorHTMLAttributes, ComponentType, FC, ReactNode } from 'react';
+import type { Route, OpenPayloadBase, Router } from '@argon-router/core';
+import type { AnchorHTMLAttributes, ComponentType, FC, ReactNode } from 'react';
 
-interface CreateBaseRouteViewProps<T> {
-  route: Route<T>;
+interface CreateBaseRouteViewProps<T extends object | void = void> {
+  route: Route<T> | Router;
   layout?: ComponentType<{ children: ReactNode }>;
+  children?: CreateBaseRouteViewProps<any>[];
 }
 
-export interface CreateRouteViewProps<T> extends CreateBaseRouteViewProps<T> {
+export interface CreateRouteViewProps<T extends object | void = void>
+  extends CreateBaseRouteViewProps<T> {
   view: ComponentType;
 }
 
-export interface CreateLazyRouteViewProps<T>
+export interface CreateLazyRouteViewProps<T extends object | void = void>
   extends CreateBaseRouteViewProps<T> {
   view: () => Promise<{ default: ComponentType }>;
   fallback?: ComponentType;
 }
 
 export interface RouteView {
-  route: Route<any>;
+  route: Route<any> | Router;
   view: FC;
+  children?: RouteView[];
 }
 
 type AnchorProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'>;
 
-type BaseLinkProps<Params> = {
+type BaseLinkProps<Params extends object | void = void> = {
   to: Route<Params>;
   children?: ReactNode;
-} & AnchorProps & OpenPayloadBase;
+} & AnchorProps &
+  OpenPayloadBase;
 
-export type LinkProps<Params> = Params extends
+export type LinkProps<Params extends object | void = void> = Params extends
   | Record<string, never>
   | void
   | undefined

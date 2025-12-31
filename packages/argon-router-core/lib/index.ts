@@ -4,6 +4,7 @@ export { chainRoute } from './chain-route';
 export { createRouterControls } from './create-router-controls';
 export { group } from './group';
 export { createVirtualRoute } from './create-virtual-route';
+
 export type {
   Route,
   Router,
@@ -14,4 +15,14 @@ export type {
   QueryTracker,
   QueryTrackerConfig,
   VirtualRoute,
+  MappedRoute,
 } from './types';
+
+export {
+  historyAdapter,
+  queryAdapter,
+  type RouterAdapter,
+  type RouterLocation,
+} from './adapters';
+
+export { is } from './utils';

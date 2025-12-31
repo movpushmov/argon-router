@@ -3,15 +3,17 @@ import {
   createStore,
   EventCallable,
   sample,
-  Store,
+  type Store,
 } from 'effector';
-import {
+
+import type {
   NavigatePayload,
   Query,
   QueryTracker,
   QueryTrackerConfig,
   Route,
 } from './types';
+
 import type { z, ZodType } from 'zod/v4';
 
 function isForRouteActive(forRoutes: Route<any>[], activeRoutes: Route<any>[]) {
@@ -93,10 +95,12 @@ export function trackQueryFactory({
       ],
     });
 
+    // @ts-expect-error TS is wrong
     sample({
       clock: enter,
       source: $query,
       fn: (query, payload) => {
+        // @ts-expect-error TS is also wrong
         return { query: { ...query, ...payload } };
       },
       target: navigate,

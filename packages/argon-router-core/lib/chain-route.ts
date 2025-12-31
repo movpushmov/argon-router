@@ -1,5 +1,11 @@
-import { createEffect, Effect, EventCallable, sample, Unit } from 'effector';
 import {
+  createEffect,
+  sample,
+  type Effect,
+  type EventCallable,
+  type Unit,
+} from 'effector';
+import type {
   AsyncBundleImport,
   OpenPayloadBase,
   Route,
@@ -8,13 +14,13 @@ import {
 } from './types';
 import { createVirtualRoute } from './create-virtual-route';
 
-type BeforeOpenUnit<T> =
+type BeforeOpenUnit<T extends object | void = void> =
   | (T extends void
       ? EventCallable<void> | EventCallable<OpenPayloadBase>
       : EventCallable<{ params: T } & OpenPayloadBase>)
   | Effect<RouteOpenedPayload<T>, any>;
 
-interface ChainRouteProps<T> {
+interface ChainRouteProps<T extends object | void = void> {
   route: Route<T>;
   beforeOpen: BeforeOpenUnit<T> | BeforeOpenUnit<T>[];
   openOn?: Unit<any> | Unit<any>[];
@@ -62,7 +68,7 @@ interface ChainRouteProps<T> {
  * const postLoadedRoute = chainRoute({ route: authorizedRoute, ... });
  * ```
  */
-export function chainRoute<T>(
+export function chainRoute<T extends object | void = void>(
   props: ChainRouteProps<T>,
 ): VirtualRoute<RouteOpenedPayload<T>, T> {
   const { route, beforeOpen, openOn, cancelOn } = props;
@@ -82,10 +88,10 @@ export function chainRoute<T>(
 
   const transformer = (payload: RouteOpenedPayload<T>): T => {
     if (!payload) {
-      return null as T;
+      return {} as T;
     }
 
-    return 'params' in payload ? payload.params : (null as T);
+    return 'params' in payload ? (payload.params as T) : ({} as T);
   };
 
   const virtualRoute = createVirtualRoute<RouteOpenedPayload<T>, T>({

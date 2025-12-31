@@ -1,73 +1,328 @@
 # createRouterControls
 
-Creates router controls
+Create the core navigation controls for managing browser history, URL paths, and query parameters. These controls are typically used internally by `createRouter`, but can also be used independently for custom routing solutions.
 
-### Basic example
+## API
 
-```ts
-import { createRouterControls } from '@argon-router/core';
-
-const controls = createRouterControls();
+```typescript
+function createRouterControls(): RouterControls
 ```
 
-::: warning
+### Returns
 
-router controls need to be initialzed with `setHistory` event, which requires memory or browser history from `history` package.
+`RouterControls` object with the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `$history` | `Store<RouterAdapter \| null>` | Current history adapter instance |
+| `$locationState` | `Store<LocationState>` | Current path and query state |
+| `$query` | `Store<Query>` | Current query parameters |
+| `$path` | `Store<string>` | Current pathname |
+| `setHistory` | `Event<RouterAdapter>` | Initialize controls with history adapter |
+| `navigate` | `Event<NavigatePayload>` | Navigate to a path with query parameters |
+| `back` | `Event<void>` | Navigate back in history |
+| `forward` | `Event<void>` | Navigate forward in history |
+| `locationUpdated` | `Event<{ pathname, query }>` | Fires when location changes |
+| `trackQuery` | `function` | Create query parameter trackers |
+
+## Usage
+
+### Basic Setup
 
 ```ts
-import { createRouterControls } from '@argon-router/core';
+import { createRouterControls, historyAdapter } from '@argon-router/core';
+import { createBrowserHistory } from 'history';
+
+const controls = createRouterControls();
+
+// Initialize with browser history
+controls.setHistory(historyAdapter(createBrowserHistory()));
+```
+
+::: warning Initialization Required
+Router controls must be initialized with `setHistory` before use. Without a history adapter, navigation methods will throw errors.
+:::
+
+### Navigate to Paths
+
+```ts
+import { sample } from 'effector';
+
+// Navigate to a new path
+sample({
+  clock: goToHomePage,
+  fn: () => ({ path: '/' }),
+  target: controls.navigate,
+});
+
+// Navigate with query parameters
+sample({
+  clock: searchSubmitted,
+  fn: (searchTerm) => ({
+    path: '/search',
+    query: { q: searchTerm },
+  }),
+  target: controls.navigate,
+});
+
+// Replace current history entry
+sample({
+  clock: updateFilters,
+  fn: (filters) => ({
+    query: { filters },
+    replace: true, // Don't add new history entry
+  }),
+  target: controls.navigate,
+});
+```
+
+### Update Query Parameters
+
+```ts
+import { sample } from 'effector';
+
+// Add query parameters while keeping current path
+sample({
+  clock: filterChanged,
+  fn: (filter) => ({
+    query: { filter, page: '1' },
+  }),
+  target: controls.navigate,
+});
+
+// Clear specific query parameter
+sample({
+  clock: clearSearch,
+  fn: () => ({ query: { q: undefined } }),
+  target: controls.navigate,
+});
+```
+
+### Navigate Back/Forward
+
+```ts
+import { sample } from 'effector';
+
+// Browser back button
+sample({
+  clock: backButtonClicked,
+  target: controls.back,
+});
+
+// Browser forward button
+sample({
+  clock: forwardButtonClicked,
+  target: controls.forward,
+});
+```
+
+### Read Current State
+
+```ts
+import { useUnit } from 'effector-react';
+
+function CurrentLocation() {
+  const path = useUnit(controls.$path);
+  const query = useUnit(controls.$query);
+
+  return (
+    <div>
+      <p>Path: {path}</p>
+      <p>Query: {JSON.stringify(query)}</p>
+    </div>
+  );
+}
+```
+
+### Track Query Parameters
+
+```ts
+const $searchQuery = controls.trackQuery('q');
+const $pageNumber = controls.trackQuery('page', {
+  defaultValue: '1',
+});
+
+// Use in components
+function SearchResults() {
+  const query = useUnit($searchQuery);
+  const page = useUnit($pageNumber);
+
+  return <div>Searching for "{query}" (page {page})</div>;
+}
+```
+
+### Server-Side Rendering
+
+```ts
+import { createRouterControls, historyAdapter } from '@argon-router/core';
+import { createMemoryHistory } from 'history';
+import { fork, allSettled } from 'effector';
 
 const controls = createRouterControls();
 const scope = fork();
 
+// Initialize with memory history for SSR
 await allSettled(controls.setHistory, {
   scope,
-  params: createBrowserHistory(),
+  params: historyAdapter(createMemoryHistory({
+    initialEntries: ['/products/123'],
+  })),
 });
 ```
 
-:::
-
-### Writing in query or path
-
-in some cases you need to write custom query parameters or path, you can
-make this easily with `navigate` event:
+### Custom History Adapter
 
 ```ts
+import { createRouterControls } from '@argon-router/core';
+
+const controls = createRouterControls();
+
+// Use custom adapter
+const customAdapter = {
+  location: {
+    pathname: '/current-path',
+    search: '?query=value',
+  },
+  push: (location) => {
+    console.log('Navigate to:', location);
+  },
+  replace: (location) => {
+    console.log('Replace with:', location);
+  },
+  goBack: () => console.log('Go back'),
+  goForward: () => console.log('Go forward'),
+  listen: (listener) => {
+    // Subscribe to location changes
+    return {
+      unsubscribe: () => {
+        // Cleanup
+      },
+    };
+  },
+};
+
+controls.setHistory(customAdapter);
+```
+
+### React to Location Changes
+
+```ts
+import { sample } from 'effector';
+
+// Track all navigation
 sample({
-  clock: goToPage,
-  fn: () => ({ path: '/page' }),
-  target: controls.navigate,
+  clock: controls.locationUpdated,
+  fn: ({ pathname, query }) => {
+    console.log('Navigated to:', pathname, query);
+  },
 });
 
+// Analytics tracking
 sample({
-  clock: addQuery,
-  fn: () => ({ query: { param1: 'hello', params2: [1, 2] } }),
-  target: controls.navigate,
+  clock: controls.locationUpdated,
+  fn: ({ pathname }) => ({
+    event: 'pageview',
+    path: pathname,
+  }),
+  target: sendAnalyticsFx,
 });
 ```
 
-also you can read values from this stores:
+### Derive State from Path
 
 ```ts
-controls.$query.map((query) => ...);
-controls.$path.map((path) => ...);
+import { combine } from 'effector';
+
+const $isHomePage = controls.$path.map((path) => path === '/');
+
+const $currentSection = controls.$path.map((path) => {
+  if (path.startsWith('/docs')) return 'docs';
+  if (path.startsWith('/blog')) return 'blog';
+  return 'home';
+});
+
+const $breadcrumbs = controls.$path.map((path) => {
+  return path.split('/').filter(Boolean);
+});
 ```
 
-### Navigate to path
+## NavigatePayload
+
+The `navigate` event accepts the following payload:
+
+```typescript
+interface NavigatePayload {
+  path?: string;      // Optional: new pathname
+  query?: Query;      // Optional: query parameters
+  replace?: boolean;  // Optional: replace history entry (default: false)
+}
+```
+
+## Query Type
+
+Query parameters are represented as:
+
+```typescript
+type Query = Record<string, string | string[] | undefined>;
+```
+
+Examples:
+```ts
+// Single value
+{ search: 'apple' }
+
+// Multiple values
+{ tags: ['javascript', 'typescript'] }
+
+// Remove parameter
+{ filter: undefined }
+```
+
+## Best Practices
+
+### Use createRouter Instead
+
+For most applications, use `createRouter` which includes controls automatically:
 
 ```ts
-controls.navigate({ query: { hello: 1 }, path: '/route', replace: true });
+// ✅ Recommended for most cases
+import { createRouter } from '@argon-router/core';
+
+const router = createRouter({
+  routes: [...],
+  controls: createRouterControls(),
+});
 ```
 
-## API
+### Initialize Early
 
-| name       | type                             | description                                           |
-| ---------- | -------------------------------- | ----------------------------------------------------- |
-| $query     | Store\<Query\>                   | query parameters                                      |
-| $path      | Store\<string\>                  | path                                                  |
-| back       | EventCallable\<void\>            | go back (if possible)                                 |
-| forward    | EventCallable\<void\>            | go forward (if possible)                              |
-| navigate   | EventCallable\<NavigatePayload\> | navigate to path with query & replace or not          |
-| setHistory | EventCallable\<History\>         | initialize router with history from `history` package |
-| trackQuery |                                  | track query, [reference](./track-query.md)            |
+Initialize history adapter as early as possible:
+
+```ts
+// In app entry point
+import { createBrowserHistory } from 'history';
+
+controls.setHistory(historyAdapter(createBrowserHistory()));
+```
+
+### Batch Query Updates
+
+Use `replace: true` when updating query parameters frequently:
+
+```ts
+// ❌ Creates multiple history entries
+controls.navigate({ query: { page: '1' } });
+controls.navigate({ query: { filter: 'active' } });
+
+// ✅ Single history entry
+controls.navigate({
+  query: { page: '1', filter: 'active' },
+  replace: true,
+});
+```
+
+## See Also
+
+- [createRouter](/core/create-router) - Create complete router with controls
+- [historyAdapter](/core/history-adapter) - Adapt history package for argon-router
+- [trackQuery](/core/track-query) - Track individual query parameters

@@ -1,92 +1,264 @@
 # createRouter
 
-Creates new router. Has required parameter `routes`
+Creates a router instance that manages navigation state and routes.
 
-### Basic example
+## Basic Usage
 
 ```ts
 import { createRouter } from '@argon-router/core';
-import { routes } from './routes';
+import { homeRoute, profileRoute } from './routes';
 
 const router = createRouter({
-  routes: [routes.route1, routes.route2],
+  routes: [homeRoute, profileRoute],
 });
 ```
 
 ::: warning
+Router must be initialized with `setHistory` event using history from the `history` package:
 
-router need to be initialzed with `setHistory` event, which requires memory or browser history from `history` package.
+```ts
+import { createBrowserHistory } from 'history';
+import { historyAdapter } from '@argon-router/core';
+
+const history = createBrowserHistory();
+router.setHistory(historyAdapter(history));
+```
+
+For React apps with Effector scope:
 
 ```ts
 import { createRoot } from 'react-dom/client';
 import { allSettled, fork } from 'effector';
 import { createBrowserHistory } from 'history';
 import { Provider } from 'effector-react';
-import { router } from './shared/routing';
-import { App } from './app';
+import { historyAdapter } from '@argon-router/core';
 
 const root = createRoot(document.getElementById('root')!);
 
 async function render() {
   const scope = fork();
+  const history = createBrowserHistory();
 
   await allSettled(router.setHistory, {
     scope,
-    params: createBrowserHistory(),
+    params: historyAdapter(history),
   });
 
   root.render(
     <Provider value={scope}>
       <App />
-    </Provider>,
+    </Provider>
   );
 }
 
 render();
 ```
-
 :::
 
-### Writing in query or path
+## Configuration
 
-in some cases you need to write custom query parameters or path, you can
-make this easily with `navigate` event:
+### `routes` (required)
+
+Array of routes to register. Can include:
+- **Path routes** - routes with paths
+- **Pathless routes** - routes without paths (must assign path here)
+- **Nested routers** - other router instances
 
 ```ts
+const dialogRoute = createRoute(); // Pathless route
+
+const router = createRouter({
+  routes: [
+    homeRoute,                              // Path route
+    profileRoute,                           // Path route
+    { path: '/dialog', route: dialogRoute }, // Pathless route with assigned path
+    nestedRouter,                           // Nested router
+  ],
+});
+```
+
+### `base` (optional)
+
+Base path prefix for all routes in this router:
+
+```ts
+const apiRouter = createRouter({
+  base: '/api',
+  routes: [usersRoute, postsRoute], // Will be /api/users, /api/posts
+});
+```
+
+### `controls` (optional)
+
+Custom router controls instance (for advanced use cases):
+
+```ts
+import { createRouterControls } from '@argon-router/core';
+
+const controls = createRouterControls();
+
+const router = createRouter({
+  routes: [homeRoute],
+  controls, // Use custom controls
+});
+```
+
+## Navigation
+
+### Direct Navigation
+
+Use `navigate` event to navigate programmatically:
+
+```ts
+import { sample } from 'effector';
+
+// Navigate to path
 sample({
   clock: goToPage,
   fn: () => ({ path: '/page' }),
   target: router.navigate,
 });
 
+// Update query parameters
 sample({
   clock: addQuery,
   fn: () => ({ query: { param1: 'hello', params2: [1, 2] } }),
   target: router.navigate,
 });
+
+// Navigate with replace
+sample({
+  clock: replacePage,
+  fn: () => ({ path: '/new-page', replace: true }),
+  target: router.navigate,
+});
 ```
 
-also you can read values from this stores:
+### Route-based Navigation
+
+Open routes directly (recommended):
 
 ```ts
-router.$query.map((query) => ...);
-router.$path.map((path) => ...);
+homeRoute.open();
+profileRoute.open({ params: { id: '123' } });
+profileRoute.open({ query: { tab: 'posts' }, replace: true });
 ```
 
-### Navigate to path
+## Reading State
+
+### Current Path
 
 ```ts
-route.navigate({ query: { hello: 1 }, path: '/route', replace: true });
+router.$path.watch((path) => {
+  console.log('Current path:', path);
+});
+
+// Or with map
+const isHomePage = router.$path.map((path) => path === '/home');
 ```
 
-## API
+### Query Parameters
 
-| name       | type                             | description                                           |
-| ---------- | -------------------------------- | ----------------------------------------------------- |
-| $query     | Store\<Query\>                   | query parameters                                      |
-| $path      | Store\<string\>                  | path                                                  |
-| back       | EventCallable\<void\>            | go back (if possible)                                 |
-| forward    | EventCallable\<void\>            | go forward (if possible)                              |
-| navigate   | EventCallable\<NavigatePayload\> | navigate to path with query & replace or not          |
-| setHistory | EventCallable\<History\>         | initialize router with history from `history` package |
-| trackQuery |                                  | track query, [reference](./track-query.md)            |
+```ts
+router.$query.watch((query) => {
+  console.log('Query params:', query);
+});
+
+// Extract specific param
+const searchQuery = router.$query.map((query) => query.search);
+```
+
+### Active Routes
+
+```ts
+router.$activeRoutes.watch((routes) => {
+  console.log('Currently active routes:', routes);
+});
+```
+
+## History Navigation
+
+```ts
+// Go back
+router.back();
+
+// Go forward
+router.forward();
+```
+
+## Dynamic Route Registration
+
+Register routes after router creation:
+
+```ts
+const router = createRouter({
+  routes: [homeRoute],
+});
+
+// Later...
+router.registerRoute(newRoute);
+router.registerRoute({ path: '/modal', route: modalRoute });
+```
+
+## Nested Routers
+
+Routers can be nested to create modular route structures:
+
+```ts
+const adminRouter = createRouter({
+  base: '/admin',
+  routes: [dashboardRoute, usersRoute, settingsRoute],
+});
+
+const mainRouter = createRouter({
+  routes: [
+    homeRoute,
+    aboutRoute,
+    adminRouter, // Nested router
+  ],
+});
+```
+
+## API Reference
+
+| Name            | Type                                | Description                                   |
+| --------------- | ----------------------------------- | --------------------------------------------- |
+| `$query`        | `Store<Query>`                      | Current query parameters                      |
+| `$path`         | `Store<string>`                     | Current path                                  |
+| `$history`      | `Store<RouterAdapter \| null>`      | Current history adapter                       |
+| `$activeRoutes` | `Store<Route<any>[]>`               | Currently active routes                       |
+| `back`          | `EventCallable<void>`               | Navigate back (if possible)                   |
+| `forward`       | `EventCallable<void>`               | Navigate forward (if possible)                |
+| `navigate`      | `EventCallable<NavigatePayload>`    | Navigate to path with query                   |
+| `setHistory`    | `EventCallable<RouterAdapter>`      | Initialize router with history adapter        |
+| `trackQuery`    | `(config) => QueryTracker`          | Track query parameters, see [trackQuery](./track-query.md) |
+| `registerRoute` | `(route: InputRoute) => void`       | Dynamically register a route                  |
+| `ownRoutes`     | `MappedRoute[]`                     | Routes owned by this router                   |
+| `knownRoutes`   | `MappedRoute[]`                     | All known routes (including nested)           |
+
+## Types
+
+### NavigatePayload
+
+```ts
+type NavigatePayload = {
+  path?: string;      // Path to navigate to
+  query?: Query;      // Query parameters
+  replace?: boolean;  // Replace instead of push
+};
+```
+
+### Query
+
+```ts
+type Query = Record<string, string | null | Array<string | null>>;
+```
+
+### InputRoute
+
+```ts
+type InputRoute =
+  | PathRoute<any>                               // Route with path
+  | { path: string; route: PathlessRoute<any> }  // Pathless route with assigned path
+  | Router;                                      // Nested router
+```

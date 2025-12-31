@@ -9,7 +9,12 @@ import {
 } from '../lib';
 import { act, ReactNode } from 'react';
 import { describe, expect, test } from 'vitest';
-import { chainRoute, createRoute, createRouter } from '@argon-router/core';
+import {
+  chainRoute,
+  createRoute,
+  createRouter,
+  historyAdapter,
+} from '@argon-router/core';
 import { createMemoryHistory } from 'history';
 import { render, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
@@ -24,7 +29,10 @@ describe('react bindings', () => {
 
     const history = createMemoryHistory();
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
 
     const RoutesView = createRoutesView({
       routes: [
@@ -70,7 +78,10 @@ describe('react bindings', () => {
 
     history.push('/app');
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
 
     const RoutesView = createRoutesView({
       routes: [
@@ -165,7 +176,10 @@ describe('react bindings', () => {
 
     history.push('/app');
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
 
     const RoutesView = createRoutesView({
       routes: [
@@ -221,7 +235,10 @@ describe('react bindings', () => {
 
     history.push('/app');
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
 
     const RoutesView = createRoutesView({
       routes: [
@@ -280,7 +297,10 @@ describe('react bindings', () => {
 
     history.push('/auth');
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
 
     const ProfileLayout = (props: { children: ReactNode }) => {
       return (

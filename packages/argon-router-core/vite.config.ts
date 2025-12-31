@@ -9,7 +9,6 @@ export default defineConfig({
     outDir: resolve(__dirname, 'dist'),
     lib: {
       entry: resolve(__dirname, 'lib/index.ts'),
-      name: '@effector-reform/core',
       fileName: 'index',
       formats: ['es', 'cjs'],
     },
@@ -17,7 +16,8 @@ export default defineConfig({
       external: [
         'effector',
         'patronum',
-        '@effector-reform/core',
+        'effector-action',
+        '@argon-router/paths',
         'query-string',
       ],
       output: {
@@ -25,7 +25,6 @@ export default defineConfig({
           effector: 'effector',
           patronum: 'patronum',
           'query-string': 'query-string',
-          '@effector-reform/core': '@effector-reform/core',
         },
       },
     },
@@ -36,10 +35,13 @@ export default defineConfig({
     dts({
       outDir: resolve(__dirname, 'dist'),
       entryRoot: resolve(__dirname, 'lib'),
+      exclude: [resolve(__dirname, 'tests')],
       staticImport: true,
       insertTypesEntry: true,
       rollupTypes: true,
     }),
   ],
-  test: {},
+  test: {
+    setupFiles: [resolve(__dirname, 'tests/setup.ts')],
+  },
 });

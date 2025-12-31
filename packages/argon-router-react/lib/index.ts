@@ -11,3 +11,7 @@ export type {
   CreateRouteViewProps,
   RouteView,
 } from './types';
+export { Outlet } from './outlet';
+export { useOpenedViews } from './use-opened-views';
+export { useIsOpened } from './use-is-opened';
+export { useLink } from './use-link';
