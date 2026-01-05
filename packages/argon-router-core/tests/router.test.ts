@@ -1,6 +1,6 @@
 import { allSettled, createEffect, fork } from 'effector';
 import { describe, expect, test, vi } from 'vitest';
-import { createRoute, createRouter } from '../lib';
+import { createRoute, createRouter, historyAdapter } from '../lib';
 import { createMemoryHistory } from 'history';
 
 describe('router', () => {
@@ -15,7 +15,10 @@ describe('router', () => {
       routes: [route1, route2],
     });
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
 
     history.push('/one');
 
@@ -36,7 +39,10 @@ describe('router', () => {
       routes: [route1, route2],
     });
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
 
     history.push('/one');
 
@@ -65,7 +71,10 @@ describe('router', () => {
       routes: [route1, route2, nested],
     });
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
     await allSettled(route1.open, { scope, params: {} });
 
     expect(history.location.pathname).toBe('/one');
@@ -94,7 +103,10 @@ describe('router', () => {
 
     const history = createMemoryHistory();
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
 
     history.push('/auth?login=movpushmov&password=123&retry=1&retry=1');
 
@@ -119,7 +131,10 @@ describe('router', () => {
 
     const history = createMemoryHistory();
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
     await allSettled(route.open, {
       scope,
       params: {
@@ -145,7 +160,10 @@ describe('router', () => {
     const router = createRouter({ routes: [route1, route2] });
     const history = createMemoryHistory({ initialEntries: ['/step1'] });
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
 
     history.block(() => false);
     await allSettled(route2.open, { scope, params: {} });
@@ -174,7 +192,10 @@ describe('router', () => {
     const router = createRouter({ routes: [route1, route2] });
     const history = createMemoryHistory({ initialEntries: ['/step1'] });
 
-    await allSettled(router.setHistory, { scope, params: history });
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
 
     expect(fn1).toBeCalled();
 
@@ -182,5 +203,83 @@ describe('router', () => {
     await allSettled(scope);
 
     expect(fn2).toBeCalled();
+  });
+
+  test('parent route is opened', async () => {
+    const scope = fork();
+
+    const parent = createRoute({ path: '/parent' });
+    const child = createRoute({ path: '/child', parent });
+
+    const router = createRouter({ routes: [parent, child] });
+    const history = createMemoryHistory();
+
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
+
+    history.push('/parent/child');
+    await allSettled(scope);
+
+    expect(scope.getState(parent.$isOpened)).toBeTruthy();
+    expect(scope.getState(child.$isOpened)).toBeTruthy();
+  });
+
+  test('subrouter', async () => {
+    const scope = fork();
+
+    const settingsModalRoutes = {
+      general: createRoute({ path: '/' }),
+      security: createRoute({ path: '/security' }),
+    };
+
+    const settingsModalRouter = createRouter({
+      base: '/settings',
+      routes: [settingsModalRoutes.general, settingsModalRoutes.security],
+    });
+
+    const mainRoutes = {
+      home: createRoute({ path: '/' }),
+    };
+
+    const mainRouter = createRouter({
+      routes: [mainRoutes.home, settingsModalRouter],
+    });
+
+    await allSettled(mainRouter.setHistory, {
+      scope,
+      params: historyAdapter(createMemoryHistory()),
+    });
+
+    await allSettled(mainRoutes.home.open, { scope, params: {} });
+
+    expect(scope.getState(mainRoutes.home.$isOpened)).toBeTrueWithMessage(
+      'home route should be opened',
+    );
+    expect(
+      scope.getState(settingsModalRoutes.general.$isOpened),
+    ).toBeFalseWithMessage('settings modal general route should be closed');
+
+    await allSettled(settingsModalRoutes.general.open, { scope, params: {} });
+
+    expect(scope.getState(mainRoutes.home.$isOpened)).toBeFalseWithMessage(
+      'home route should be closed',
+    );
+    expect(
+      scope.getState(settingsModalRoutes.general.$isOpened),
+    ).toBeTrueWithMessage('settings modal general route should be opened');
+
+    await allSettled(settingsModalRoutes.security.open, { scope, params: {} });
+
+    expect(scope.getState(mainRoutes.home.$isOpened)).toBeFalseWithMessage(
+      'home route should be closed',
+    );
+    expect(
+      scope.getState(settingsModalRoutes.general.$isOpened),
+    ).toBeFalseWithMessage('settings modal general route should be closed');
+    expect(
+      scope.getState(settingsModalRoutes.security.$isOpened),
+    ).toBeTrueWithMessage('settings modal security route should be opened');
   });
 });

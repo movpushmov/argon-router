@@ -44,15 +44,13 @@ export default defineConfig({
         text: 'Introduction',
         items: [
           { text: 'Getting started', link: '/introduction/getting-started' },
-          {
-            text: 'Which router i should choose?',
-            link: '/introduction/choose',
-          },
         ],
       },
       {
         text: 'Core',
+        collapsed: false,
         items: [
+          { text: 'Overview', link: '/core/' },
           { text: 'createRoute', link: '/core/create-route' },
           { text: 'createRouter', link: '/core/create-router' },
           {
@@ -66,17 +64,44 @@ export default defineConfig({
         ],
       },
       {
+        text: 'Paths',
+        collapsed: false,
+        items: [{ text: 'Overview', link: '/paths/' }],
+      },
+      {
         text: 'React',
+        collapsed: false,
         items: [
+          { text: 'Overview', link: '/react/' },
+          { text: 'RouterProvider', link: '/react/router-provider' },
           { text: 'createRouteView', link: '/react/create-route-view' },
           {
             text: 'createLazyRouteView',
             link: '/react/create-lazy-route-view',
           },
           { text: 'createRoutesView', link: '/react/create-routes-view' },
-          { text: 'useRouter', link: '/react/use-router' },
           { text: 'Link', link: '/react/link' },
+          { text: 'Outlet', link: '/react/outlet' },
+          { text: 'useRouter', link: '/react/use-router' },
+          { text: 'useLink', link: '/react/use-link' },
+          { text: 'useIsOpened', link: '/react/use-is-opened' },
+          { text: 'useOpenedViews', link: '/react/use-opened-views' },
           { text: 'withLayout', link: '/react/with-layout' },
+        ],
+      },
+      {
+        text: 'React Native β',
+        collapsed: false,
+        items: [
+          { text: 'Overview', link: '/react-native/' },
+          {
+            text: 'Stack Navigator',
+            link: '/react-native/stack-navigator',
+          },
+          {
+            text: 'Bottom Tabs Navigator',
+            link: '/react-native/bottom-tabs-navigator',
+          },
         ],
       },
     ],

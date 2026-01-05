@@ -3,31 +3,36 @@ import {
   createEffect,
   createEvent,
   createStore,
-  Effect,
   sample,
-  split,
+  type Effect,
 } from 'effector';
-import {
+import type {
   AsyncBundleImport,
   InternalRoute,
+  PathlessRoute,
+  PathRoute,
   Route,
   RouteOpenedPayload,
 } from './types';
 
 import { ParseUrlParams, ValidatePath } from '@argon-router/paths';
+import { createAction } from 'effector-action';
+
+type WithBaseRouteConfig<T = void> = T & {
+  parent?: Route<any>;
+  beforeOpen?: Effect<void, any, any>[];
+};
 
 export type CreateRouteConfig<Path> =
   ValidatePath<Path> extends ['invalid', infer Template]
-    ? {
+    ? WithBaseRouteConfig<{
         path: Template;
-        parent?: Route<any>;
-        beforeOpen?: Effect<void, any, any>[];
-      }
-    : {
+      }>
+    : WithBaseRouteConfig<{
         path: Path;
         parent?: Route<any>;
         beforeOpen?: Effect<void, any, any>[];
-      };
+      }>;
 /**
  * @description Creates argon route
  * @param config Route config
@@ -53,10 +58,21 @@ export type CreateRouteConfig<Path> =
  * posts.open(); // profile.$isOpened -> true, posts.$isOpened -> true
  * ```
  */
-export function createRoute<T extends string, Params = ParseUrlParams<T>>(
-  config: CreateRouteConfig<T>,
-): Route<Params> {
+export function createRoute<
+  T extends string,
+  Params extends object | void = ParseUrlParams<T>,
+>(config: CreateRouteConfig<T>): PathRoute<Params>;
+export function createRoute<Params extends object | void = void>(
+  config?: WithBaseRouteConfig,
+): PathlessRoute<Params>;
+export function createRoute<Params>(
+  config:
+    | WithBaseRouteConfig
+    | CreateRouteConfig<any> = {} as WithBaseRouteConfig,
+): PathRoute<any> | PathlessRoute<any> {
   let asyncImport: AsyncBundleImport;
+
+  const beforeOpen = config.beforeOpen ?? [];
 
   const openFx = createEffect<OpenPayload, OpenPayload>(async (payload) => {
     await waitForAsyncBundleFx();
@@ -73,6 +89,23 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
 
     return payload;
   });
+
+  const forceOpenParentFx = createEffect<OpenPayload, OpenPayload>(
+    async (payload) => {
+      const parent = config.parent as InternalRoute | undefined;
+
+      if (parent) {
+        await parent.internal.forceOpenParentFx({
+          ...(payload ?? { params: {} }),
+          navigate: false,
+        });
+      }
+
+      return payload;
+    },
+  );
+
+  const navigatedFx = attach({ effect: openFx });
 
   type OpenPayload = RouteOpenedPayload<Params>;
 
@@ -95,12 +128,10 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
   const waitForAsyncBundleFx = createEffect(() => asyncImport?.());
 
   const beforeOpenFx = createEffect(async () => {
-    for (const fx of config.beforeOpen ?? []) {
+    for (const fx of beforeOpen) {
       await fx();
     }
   });
-
-  const navigatedFx = attach({ effect: openFx });
 
   const defaultParams = {} as Params;
 
@@ -116,15 +147,23 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
   });
 
   sample({
-    clock: navigatedFx.doneData,
-    fn: (payload) => {
+    clock: navigatedFx.done,
+    fn: ({ params }) => params,
+    target: forceOpenParentFx,
+  });
+
+  createAction({
+    clock: [navigatedFx.doneData, forceOpenParentFx.doneData],
+    target: { $params },
+    fn: (target, payload) => {
       if (!payload) {
-        return defaultParams;
+        return target.$params(defaultParams);
       }
 
-      return 'params' in payload ? { ...payload.params } : defaultParams;
+      return target.$params(
+        'params' in payload ? { ...payload.params } : defaultParams,
+      );
     },
-    target: $params,
   });
 
   sample({
@@ -133,12 +172,18 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
     target: $params,
   });
 
-  split({
-    source: navigatedFx.doneData,
-    match: () => (typeof window === 'undefined' ? 'server' : 'client'),
-    cases: {
-      server: openedOnServer,
-      client: openedOnClient,
+  createAction({
+    clock: [navigatedFx.doneData, forceOpenParentFx.doneData],
+    target: {
+      openedOnServer,
+      openedOnClient,
+    },
+    fn: (target, payload) => {
+      if (typeof window === 'undefined') {
+        return target.openedOnServer(payload);
+      }
+
+      return target.openedOnClient(payload);
     },
   });
 
@@ -163,6 +208,7 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
     $isOpened,
     $isPending,
 
+    // @ts-expect-error :((
     open,
     closed,
     opened,
@@ -174,7 +220,9 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
     internal: {
       navigated,
       close,
-      openFx: openFx as Effect<any, any, any>,
+      openFx,
+      forceOpenParentFx,
+
       setAsyncImport: (value: AsyncBundleImport) => (asyncImport = value),
     },
 
@@ -182,7 +230,9 @@ export function createRoute<T extends string, Params = ParseUrlParams<T>>(
       params: $params,
       isPending: $isPending,
       isOpened: $isOpened,
+
+      // @ts-expect-error :((
       onOpen: open,
     }),
-  } as InternalRoute<Params>;
+  };
 }

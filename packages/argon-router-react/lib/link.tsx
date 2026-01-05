@@ -1,10 +1,9 @@
-import { RouteOpenedPayload } from '@argon-router/core';
-import { ForwardedRef, forwardRef, ReactNode } from 'react';
-import { useRouterContext } from './use-router';
-import { useUnit } from 'effector-react';
-import { LinkProps } from './types';
+import type { RouteOpenedPayload } from '@argon-router/core';
+import { type ForwardedRef, forwardRef, type ReactNode } from 'react';
+import type { LinkProps } from './types';
+import { useLink } from './use-link';
 
-type ForwardedLink = <Params = void>(
+type ForwardedLink = <Params extends object | void = void>(
   props: LinkProps<Params> & { ref?: ForwardedRef<HTMLAnchorElement> },
 ) => ReactNode;
 
@@ -36,22 +35,13 @@ export const Link: ForwardedLink = forwardRef<
 >((props, ref) => {
   const { to, params, onClick, replace, query, ...anchorProps } = props;
 
-  const { mappedRoutes } = useRouterContext();
-  const target = mappedRoutes.find(({ route }) => route === to);
-
-  const { onOpen } = useUnit(to);
-
-  if (!target) {
-    throw new Error(
-      `[Link] Route with path "${to.path}" not found. Maybe it is not passed into createRouter?`,
-    );
-  }
+  const { path, onOpen } = useLink(to, params);
 
   return (
     <a
       {...anchorProps}
       ref={ref}
-      href={target.build(params ?? undefined)}
+      href={path}
       onClick={(e) => {
         onClick?.(e);
 
@@ -72,7 +62,11 @@ export const Link: ForwardedLink = forwardRef<
 
         e.preventDefault();
 
-        onOpen({ params: params || {}, replace, query } as RouteOpenedPayload<any>);
+        onOpen({
+          params: params || {},
+          replace,
+          query,
+        } as RouteOpenedPayload<any>);
       }}
     />
   );

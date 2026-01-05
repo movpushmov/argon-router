@@ -1,4 +1,4 @@
-import { CreateRouteViewProps, RouteView } from './types';
+import type { CreateRouteViewProps, RouteView } from './types';
 
 /**
  * @description Creates Route view without async bundle load
@@ -21,7 +21,9 @@ import { CreateRouteViewProps, RouteView } from './types';
  * });
  * ```
  */
-export function createRouteView<T>(props: CreateRouteViewProps<T>): RouteView {
+export function createRouteView<T extends object | void = void>(
+  props: CreateRouteViewProps<T>,
+): RouteView {
   const { layout: Layout, view: View } = props;
 
   const view = Layout

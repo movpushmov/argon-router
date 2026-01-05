@@ -1,14 +1,49 @@
-import { attach, sample, scopeBind } from 'effector';
-import { InternalRoute, NavigatePayload, Route, Router } from './types';
+import { attach, createEvent, sample, scopeBind } from 'effector';
+import type {
+  InternalPathlessRoute,
+  InternalPathRoute,
+  InternalRoute,
+  InternalRouter,
+  MappedRoute,
+  PathlessRoute,
+  PathRoute,
+  Route,
+  Router,
+  RouterControls,
+} from './types';
 import { trackQueryFactory } from './track-query';
 
 import { compile } from '@argon-router/paths';
 import { createRouterControls } from './create-router-controls';
+import { createAction } from 'effector-action';
+import { is } from './utils';
+
+type InputRoute =
+  | PathRoute<any>
+  | { path: string; route: PathlessRoute<any> }
+  | Router;
 
 interface RouterConfig {
   base?: string;
-  routes: Route<any>[];
+  routes: InputRoute[];
+  controls?: RouterControls;
 }
+
+const inputIs = {
+  pathlessRoute(
+    route: InputRoute,
+  ): route is { path: string; route: PathlessRoute<any> } {
+    return 'route' in route;
+  },
+
+  pathRoute(route: InputRoute): route is PathRoute<any> {
+    return !this.pathlessRoute(route) && !this.router(route);
+  },
+
+  router(route: InputRoute): route is Router {
+    return is.router(route);
+  },
+};
 
 /**
  * @description Creates argon router
@@ -48,38 +83,98 @@ export function createRouter(config: RouterConfig): Router {
   const {
     $path,
     $query,
+    $history,
     back,
     forward,
     navigate,
     setHistory,
     locationUpdated,
-  } = createRouterControls();
+  } = config.controls ?? createRouterControls();
 
-  const mappedRoutes = routes.map((route) => {
-    let internalRoute = route as InternalRoute<any>;
+  function getPathWithBase(path: string) {
+    if (base === '/') {
+      return path;
+    }
+
+    return path === '/' ? base : `${base}${path}`;
+  }
+
+  const connectToParentRouter = createEvent<Router>();
+
+  let parent: Router | null = null;
+
+  const knownRoutes: MappedRoute[] = [];
+
+  function mapRoute(inputRoute: InputRoute): MappedRoute | null {
+    if (inputIs.pathlessRoute(inputRoute)) {
+      const { build, parse } = compile<string, any>(
+        getPathWithBase(inputRoute.path),
+      );
+
+      const route = {
+        route: inputRoute.route as InternalPathlessRoute<any>,
+        path: inputRoute.path,
+        build,
+        parse,
+      };
+
+      return route;
+    }
+
+    if (inputIs.router(inputRoute)) {
+      sample({
+        clock: setHistory,
+        target: inputRoute.setHistory,
+      });
+
+      return null;
+    }
+
+    let internalRoute = inputRoute as InternalPathRoute<any>;
     const path: string[] = [];
 
     path.unshift(internalRoute.path);
 
     while (internalRoute.parent) {
-      internalRoute = internalRoute.parent as InternalRoute<any>;
+      if (is.pathlessRoute(internalRoute.parent)) {
+        break;
+      }
+
+      internalRoute = internalRoute.parent as InternalPathRoute<any>;
 
       if (internalRoute.path !== '/') {
         path.unshift(internalRoute.path);
       }
     }
 
-    const joinedPath = base === '/' ? path.join('') : [base, ...path].join('');
+    const joinedPath = getPathWithBase(path.join(''));
 
     const { build, parse } = compile<string, any>(joinedPath);
 
-    return {
-      route: route as InternalRoute<any>,
+    const route = {
+      route: inputRoute as InternalRoute<any>,
       path: joinedPath,
       build,
       parse,
     };
-  });
+
+    return route;
+  }
+
+  const ownRoutes = routes.reduce<MappedRoute[]>((acc, inputRoute) => {
+    const mappedRoute = mapRoute(inputRoute);
+
+    if (mappedRoute) {
+      knownRoutes.push(mappedRoute);
+      acc.push(mappedRoute);
+    }
+
+    if (inputIs.router(inputRoute)) {
+      knownRoutes.push(...inputRoute.knownRoutes);
+    }
+
+    return acc;
+  }, []);
 
   const $activeRoutes = $path.map((path) => {
     const result: Route<any>[] = [];
@@ -88,7 +183,7 @@ export function createRouter(config: RouterConfig): Router {
       return result;
     }
 
-    for (const { route, parse } of mappedRoutes) {
+    for (const { route, parse } of ownRoutes) {
       if (parse(path)) {
         result.push(route);
       }
@@ -100,7 +195,7 @@ export function createRouter(config: RouterConfig): Router {
   const openRoutesByPathFx = attach({
     source: { query: $query, path: $path },
     effect: async ({ query, path }) => {
-      for (const { route, parse } of mappedRoutes) {
+      for (const { route, parse } of ownRoutes) {
         const matchResult = parse(path);
         const [routeClosed, routeNavigated] = [
           scopeBind(route.internal.close),
@@ -119,21 +214,30 @@ export function createRouter(config: RouterConfig): Router {
     },
   });
 
-  for (const { route, build } of mappedRoutes) {
-    sample({
+  function registerRouteApi({ route, build }: MappedRoute) {
+    createAction({
       clock: route.internal.openFx.doneData,
-      filter: (payload) => payload?.navigate !== false,
-      fn: (payload): NavigatePayload => {
-        return {
+      target: { navigate },
+      fn: (target, payload) => {
+        if (payload?.navigate === false) {
+          return;
+        }
+
+        const navigateParams = {
           path: build(
             payload && 'params' in payload ? payload.params : undefined,
           ),
           query: payload?.query ?? {},
           replace: payload?.replace,
         };
+
+        return target.navigate(navigateParams);
       },
-      target: navigate,
     });
+  }
+
+  for (const route of ownRoutes) {
+    registerRouteApi(route);
   }
 
   sample({
@@ -145,9 +249,12 @@ export function createRouter(config: RouterConfig): Router {
     target: openRoutesByPathFx,
   });
 
-  return {
+  const router = {
+    '@@type': 'router',
+
     $query,
     $path,
+    $history,
 
     $activeRoutes,
 
@@ -156,12 +263,40 @@ export function createRouter(config: RouterConfig): Router {
 
     navigate,
 
-    routes,
     setHistory,
+    ownRoutes,
+    knownRoutes,
 
-    mappedRoutes,
+    internal: {
+      connectToParentRouter,
+
+      get parent() {
+        return parent;
+      },
+
+      set parent(router: Router | null) {
+        parent = router;
+      },
+
+      base,
+    },
 
     trackQuery: trackQueryFactory({ $activeRoutes, $query, navigate }),
+
+    registerRoute: (route: InputRoute) => {
+      const mappedRoute = mapRoute(route);
+
+      if (mappedRoute) {
+        knownRoutes.push(mappedRoute);
+        ownRoutes.push(mappedRoute);
+
+        registerRouteApi(mappedRoute);
+      }
+
+      if (inputIs.router(route)) {
+        knownRoutes.push(...route.knownRoutes);
+      }
+    },
 
     '@@unitShape': () => ({
       query: $query,
@@ -172,5 +307,7 @@ export function createRouter(config: RouterConfig): Router {
       onForward: forward,
       onNavigate: navigate,
     }),
-  };
+  } as InternalRouter;
+
+  return router;
 }

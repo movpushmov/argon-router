@@ -1,13 +1,13 @@
 import {
   createEvent,
   createStore,
-  Effect,
   sample,
   split,
-  Store,
+  type Effect,
+  type Store,
 } from 'effector';
 
-import { VirtualRoute } from './types';
+import type { VirtualRoute } from './types';
 
 interface VirtualRouteOptions<T, TransformerResult> {
   beforeOpen?: Effect<void, any, any>[];
@@ -69,6 +69,8 @@ export function createVirtualRoute<T = void, TransformerResult = void>(
   });
 
   return {
+    '@@type': 'pathless-route',
+
     $params,
     $isOpened,
     $isPending,

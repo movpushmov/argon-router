@@ -4,6 +4,7 @@ import {
   createRoute,
   RouteOpenedPayload,
   createRouter,
+  historyAdapter,
 } from '../lib';
 import { allSettled, createEffect, createEvent, fork, sample } from 'effector';
 import { createMemoryHistory } from 'history';
@@ -16,7 +17,7 @@ describe('chained routes', () => {
     const router = createRouter({ routes: [route] });
 
     await allSettled(router.setHistory, {
-      params: createMemoryHistory(),
+      params: historyAdapter(createMemoryHistory()),
       scope,
     });
 

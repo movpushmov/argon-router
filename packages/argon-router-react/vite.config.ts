@@ -8,7 +8,6 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'lib/index.ts'),
-      name: 'EffectorReformReact',
       fileName: 'index',
       formats: ['es', 'cjs'],
     },
@@ -16,16 +15,16 @@ export default defineConfig({
       external: [
         'effector',
         'effector-react',
+        '@argon-router/core',
         'react',
         'react/jsx-runtime',
-        '@effector-reform/core',
       ],
       output: {
         globals: {
           react: 'react',
           effector: 'effector',
           'effector-react': 'effector-react',
-          '@effector-reform/core': '@effector-reform/core',
+          '@argon-router/core': '@argon-router/core',
           'react/jsx-runtime': 'react/jsx-runtime',
         },
       },
@@ -38,6 +37,7 @@ export default defineConfig({
     dts({
       outDir: resolve(__dirname, 'dist'),
       entryRoot: resolve(__dirname, 'lib'),
+      exclude: [resolve(__dirname, 'tests')],
       staticImport: true,
       insertTypesEntry: true,
       rollupTypes: true,

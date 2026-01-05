@@ -1,7 +1,7 @@
-import { ComponentType, createElement, useMemo } from 'react';
-import { RouteView } from './types';
-import { useUnit } from 'effector-react';
-import { InternalRoute } from '@argon-router/core/lib/types';
+import { type ComponentType, createElement } from 'react';
+import { OutletContext } from './context';
+import { useOpenedViews } from './use-opened-views';
+import type { RouteView } from './types';
 
 interface CreateRoutesViewProps {
   routes: RouteView[];
@@ -35,26 +35,16 @@ export const createRoutesView = (props: CreateRoutesViewProps) => {
   const { routes, otherwise: NotFound } = props;
 
   return () => {
-    const visibilities = useUnit(routes.map((view) => view.route.$isOpened));
+    const openedView = useOpenedViews(routes).at(-1);
 
-    const openedViews = useMemo(() => {
-      const filtered = routes.filter((_, i) => visibilities[i]);
-
-      return filtered.reduce(
-        (filtered, view) =>
-          filtered.filter(
-            (r) => r.route !== (view.route as InternalRoute<any>).parent,
-          ),
-        filtered,
-      );
-    }, [visibilities]);
-
-    const lastRoute = openedViews.at(-1);
-
-    if (!lastRoute) {
+    if (!openedView) {
       return NotFound ? <NotFound /> : null;
     }
 
-    return createElement(lastRoute.view);
+    return (
+      <OutletContext.Provider value={{ children: openedView.children ?? [] }}>
+        {createElement(openedView.view)}
+      </OutletContext.Provider>
+    );
   };
 };
