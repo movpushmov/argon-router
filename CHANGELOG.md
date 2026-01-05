@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/movpushmov/argon-router/compare/v0.11.2...v0.12.0) (2026-01-05)
+
+### Bug Fixes
+
+- chainRoute loses $params ([f3e82b4](https://github.com/movpushmov/argon-router/commit/f3e82b4f646ade05614d4bf186ec6aa9dbd75ca5))
+
+### Features
+
+- paths convert ([9984ad0](https://github.com/movpushmov/argon-router/commit/9984ad013edd61b4dd72e432ac777b410b4af543))
+- react-native, subroutes and other features ([14c4394](https://github.com/movpushmov/argon-router/commit/14c4394696577d8ac09657db8ea15fedd2b11d2d))
+
 ## [0.11.2](https://github.com/movpushmov/argon-router/compare/v0.11.1...v0.11.2) (2025-09-02)
 
 **Note:** Version bump only for package argon-router

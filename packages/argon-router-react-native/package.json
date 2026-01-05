@@ -5,7 +5,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "private": false,
-  "version": "0.1.0",
+  "version": "0.12.0",
   "description": "React Native bindings for argon router with React Navigation integration",
   "keywords": [
     "effector",
@@ -45,8 +45,8 @@
     "url": "https://github.com/movpushmov/argon-router/issues"
   },
   "dependencies": {
-    "@argon-router/core": "^0.11.1",
-    "@argon-router/react": "^0.11.2"
+    "@argon-router/core": "^0.12.0",
+    "@argon-router/react": "^0.12.0"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.26.3",
@@ -57,9 +57,9 @@
     "react-native": "^0.72.0"
   },
   "peerDependencies": {
+    "@react-navigation/bottom-tabs": ">=6",
     "@react-navigation/native": ">=6",
     "@react-navigation/stack": ">=6",
-    "@react-navigation/bottom-tabs": ">=6",
     "effector": ">=23",
     "effector-react": ">=23",
     "react": "18 || 19",
