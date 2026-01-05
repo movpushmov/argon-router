@@ -14,21 +14,21 @@ controls.trackQuery<T extends ZodType>(config: Omit<QueryTrackerConfig<T>, 'forR
 
 ### Config
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `parameters` | `ZodType` | Zod schema for query parameter validation |
-| `forRoutes` | `Route[]` | Optional (router only). Only track when these routes are active |
+| Parameter    | Type      | Description                                                     |
+| ------------ | --------- | --------------------------------------------------------------- |
+| `parameters` | `ZodType` | Zod schema for query parameter validation                       |
+| `forRoutes`  | `Route[]` | Optional (router only). Only track when these routes are active |
 
 ### Returns
 
 `QueryTracker<T>` with the following properties:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `enter` | `Event<z.infer<T>>` | Programmatically add parameters to URL |
-| `entered` | `Event<z.infer<T>>` | Fires when parameters match schema |
-| `exit` | `Event<{ ignoreParams?: string[] } \| void>` | Programmatically remove parameters |
-| `exited` | `Event<void>` | Fires when parameters no longer match |
+| Property  | Type                                         | Description                            |
+| --------- | -------------------------------------------- | -------------------------------------- |
+| `enter`   | `Event<z.infer<T>>`                          | Programmatically add parameters to URL |
+| `entered` | `Event<z.infer<T>>`                          | Fires when parameters match schema     |
+| `exit`    | `Event<{ ignoreParams?: string[] } \| void>` | Programmatically remove parameters     |
+| `exited`  | `Event<void>`                                | Fires when parameters no longer match  |
 
 ## Usage
 
@@ -260,9 +260,11 @@ const searchTracker = router.trackQuery({
   forRoutes: [searchRoute],
 });
 
-const loadSearchResultsFx = createEffect(async (params: { q: string; page?: string }) => {
-  return await fetchSearchResults(params);
-});
+const loadSearchResultsFx = createEffect(
+  async (params: { q: string; page?: string }) => {
+    return await fetchSearchResults(params);
+  },
+);
 
 // Load results when search query is entered
 sample({
@@ -284,7 +286,10 @@ import { z } from 'zod';
 
 const strictPaginationTracker = router.trackQuery({
   parameters: z.object({
-    page: z.string().regex(/^\d+$/).refine((val) => parseInt(val) > 0),
+    page: z
+      .string()
+      .regex(/^\d+$/)
+      .refine((val) => parseInt(val) > 0),
     limit: z.enum(['10', '20', '50', '100']),
   }),
   forRoutes: [listRoute],
@@ -316,7 +321,10 @@ Define precise validation rules:
 // ✅ Good: Specific validation
 const tracker = router.trackQuery({
   parameters: z.object({
-    page: z.string().regex(/^\d+$/).refine((val) => parseInt(val) > 0),
+    page: z
+      .string()
+      .regex(/^\d+$/)
+      .refine((val) => parseInt(val) > 0),
     sortBy: z.enum(['name', 'date', 'price']),
   }),
   forRoutes: [listRoute],
@@ -380,4 +388,3 @@ const mixedTracker = router.trackQuery({
 
 - [createRouter](/core/create-router) - Create router with trackQuery
 - [createRouterControls](/core/create-router-controls) - Create controls with trackQuery
-- [Query Types](/core/types#query) - Query parameter type definitions

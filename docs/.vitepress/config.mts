@@ -57,6 +57,7 @@ export default defineConfig({
             text: 'createRouterControls',
             link: '/core/create-router-controls',
           },
+          { text: 'Adapters', link: '/core/adapters' },
           { text: 'trackQuery', link: '/core/track-query' },
           { text: 'chainRoute', link: '/core/chain-route' },
           { text: 'group', link: '/core/group' },

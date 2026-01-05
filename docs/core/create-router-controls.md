@@ -324,5 +324,5 @@ controls.navigate({
 ## See Also
 
 - [createRouter](/core/create-router) - Create complete router with controls
-- [historyAdapter](/core/history-adapter) - Adapt history package for argon-router
+- [Adapters](/core/adapters) - History adapters and custom adapter creation
 - [trackQuery](/core/track-query) - Track individual query parameters

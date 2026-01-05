@@ -64,5 +64,6 @@
     "effector-react": ">=23",
     "react": "18 || 19",
     "react-native": ">=0.70"
-  }
+  },
+  "gitHead": "9832d6cd282d6abd33c26ba4d03b9a1176110fc4"
 }

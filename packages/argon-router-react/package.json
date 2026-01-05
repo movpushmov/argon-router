@@ -58,5 +58,6 @@
     "effector": ">=23",
     "effector-react": ">=23",
     "react": "18 || 19"
-  }
+  },
+  "gitHead": "9832d6cd282d6abd33c26ba4d03b9a1176110fc4"
 }
