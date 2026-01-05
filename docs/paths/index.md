@@ -7,6 +7,7 @@ The `@argon-router/paths` package provides powerful path parsing and building ut
 `@argon-router/paths` is a standalone library for working with URL paths. It compiles path patterns into parser and builder functions with automatic parameter type extraction.
 
 **Key features:**
+
 - **Type-Safe** - Full TypeScript inference of path parameters
 - **Flexible** - Support for strings, numbers, unions, and arrays
 - **Modifiers** - Optional (`?`), repeating (`+`, `*`), and range (`{min,max}`) parameters
@@ -45,7 +46,7 @@ const { parse, build } = compile('/user/:name');
 //                                        ^- { name: string }
 
 build({ name: 'john' }); // '/user/john'
-parse('/user/jane');     // { path: '/user/jane', params: { name: 'jane' } }
+parse('/user/jane'); // { path: '/user/jane', params: { name: 'jane' } }
 ```
 
 ### Number Parameters
@@ -54,9 +55,9 @@ parse('/user/jane');     // { path: '/user/jane', params: { name: 'jane' } }
 const { parse, build } = compile('/post/:id<number>');
 //                                        ^- { id: number }
 
-build({ id: 123 });   // '/post/123'
-parse('/post/456');   // { path: '/post/456', params: { id: 456 } }
-parse('/post/abc');   // null (validation failed)
+build({ id: 123 }); // '/post/123'
+parse('/post/456'); // { path: '/post/456', params: { id: 456 } }
+parse('/post/abc'); // null (validation failed)
 ```
 
 ### Union Parameters
@@ -65,9 +66,9 @@ parse('/post/abc');   // null (validation failed)
 const { parse, build } = compile('/edit/:mode<create|update|delete>');
 //                                        ^- { mode: 'create' | 'update' | 'delete' }
 
-build({ mode: 'create' });  // '/edit/create'
-parse('/edit/update');      // { path: '/edit/update', params: { mode: 'update' } }
-parse('/edit/other');       // null (not in union)
+build({ mode: 'create' }); // '/edit/create'
+parse('/edit/update'); // { path: '/edit/update', params: { mode: 'update' } }
+parse('/edit/other'); // null (not in union)
 ```
 
 ### Multiple Parameters
@@ -91,11 +92,11 @@ parse('/blog/2024/12/typescript-tips');
 const { parse, build } = compile('/user/:id?');
 //                                        ^- { id?: string }
 
-build({});           // '/user'
+build({}); // '/user'
 build({ id: '123' }); // '/user/123'
 
-parse('/user');      // { path: '/user', params: {} }
-parse('/user/456');  // { path: '/user/456', params: { id: '456' } }
+parse('/user'); // { path: '/user', params: {} }
+parse('/user/456'); // { path: '/user/456', params: { id: '456' } }
 ```
 
 ### Optional with Type
@@ -104,7 +105,7 @@ parse('/user/456');  // { path: '/user/456', params: { id: '456' } }
 const { parse, build } = compile('/post/:id<number>?');
 //                                        ^- { id?: number }
 
-build({});          // '/post'
+build({}); // '/post'
 build({ id: 123 }); // '/post/123'
 ```
 
@@ -116,12 +117,12 @@ One or more values:
 const { parse, build } = compile('/category/:tags+');
 //                                          ^- { tags: string[] }
 
-build({ tags: ['js'] });              // '/category/js'
+build({ tags: ['js'] }); // '/category/js'
 build({ tags: ['js', 'ts', 'react'] }); // '/category/js/ts/react'
 
-parse('/category/javascript');        // { path: '...', params: { tags: ['javascript'] } }
-parse('/category/js/typescript');     // { path: '...', params: { tags: ['js', 'typescript'] } }
-parse('/category');                   // null (requires at least one)
+parse('/category/javascript'); // { path: '...', params: { tags: ['javascript'] } }
+parse('/category/js/typescript'); // { path: '...', params: { tags: ['js', 'typescript'] } }
+parse('/category'); // null (requires at least one)
 ```
 
 ### Zero or More Parameters (`*`)
@@ -130,11 +131,11 @@ parse('/category');                   // null (requires at least one)
 const { parse, build } = compile('/files/:path*');
 //                                        ^- { path: string[] }
 
-build({ path: [] });                    // '/files'
+build({ path: [] }); // '/files'
 build({ path: ['docs', 'api', 'index'] }); // '/files/docs/api/index'
 
-parse('/files');                        // { path: '/files', params: { path: [] } }
-parse('/files/src/utils');              // { path: '...', params: { path: ['src', 'utils'] } }
+parse('/files'); // { path: '/files', params: { path: [] } }
+parse('/files/src/utils'); // { path: '...', params: { path: ['src', 'utils'] } }
 ```
 
 ### Range Parameters (`{min,max}`)
@@ -145,13 +146,13 @@ Specify exact ranges:
 const { parse, build } = compile('/path/:segments{2,3}');
 //                                       ^- { segments: string[] }
 
-build({ segments: ['a', 'b'] });      // '/path/a/b'
+build({ segments: ['a', 'b'] }); // '/path/a/b'
 build({ segments: ['a', 'b', 'c'] }); // '/path/a/b/c'
-build({ segments: ['a'] });           // Error: must have 2-3 items
+build({ segments: ['a'] }); // Error: must have 2-3 items
 
-parse('/path/x/y');     // { path: '...', params: { segments: ['x', 'y'] } }
-parse('/path/x/y/z');   // { path: '...', params: { segments: ['x', 'y', 'z'] } }
-parse('/path/x');       // null (need 2-3 segments)
+parse('/path/x/y'); // { path: '...', params: { segments: ['x', 'y'] } }
+parse('/path/x/y/z'); // { path: '...', params: { segments: ['x', 'y', 'z'] } }
+parse('/path/x'); // null (need 2-3 segments)
 parse('/path/w/x/y/z'); // null (max 3 segments)
 ```
 
@@ -162,8 +163,8 @@ parse('/path/w/x/y/z'); // null (max 3 segments)
 const { parse, build } = compile('/items/:ids<number>{1,3}?');
 //                                         ^- { ids?: number[] }
 
-build({});                      // '/items'
-build({ ids: [1, 2] });         // '/items/1/2'
+build({}); // '/items'
+build({ ids: [1, 2] }); // '/items/1/2'
 
 // Range with type
 const { parse, build } = compile('/tag/:names<create|update|delete>{2,2}');
@@ -200,7 +201,7 @@ build({ id: 123 });
 
 // ❌ TypeScript error
 build({ id: '123' }); // Expected number, got string
-build({});            // Missing required parameter
+build({}); // Missing required parameter
 ```
 
 ## Advanced Examples
@@ -262,7 +263,9 @@ generateBreadcrumbs('/products/electronics/laptops');
 ### Date-based Routes
 
 ```ts
-const { parse, build } = compile('/archive/:year<number>/:month<number>?/:day<number>?');
+const { parse, build } = compile(
+  '/archive/:year<number>/:month<number>?/:day<number>?',
+);
 
 function buildArchiveUrl(date: Date) {
   return build({
@@ -287,7 +290,7 @@ function navigateToUser(id: unknown) {
   if (typeof id !== 'number') {
     throw new Error('Invalid user ID');
   }
-  
+
   return build({ id });
 }
 ```
@@ -340,6 +343,86 @@ function parseUser(url: string) {
 }
 ```
 
+## Path Conversion
+
+### `convertPath(path, mode)`
+
+Convert paths from argon-router format to express or other path format.
+
+**Parameters:**
+
+- `path: string` - The path to convert
+- `mode: 'express'` - The result format
+
+**Returns:** `string` - The converted path
+
+```ts
+import { convertPath } from '@argon-router/paths';
+
+// Convert argon-router patterns to Express format
+convertPath('/user/:id<.+>', 'express');
+// '/user/:id'
+
+convertPath('/files/:id+', 'express');
+// '/files/*id'
+
+convertPath('/files/:id*', 'express');
+// '/files/*id'
+
+convertPath('/files/:id{.+}', 'express');
+// '/files/*id'
+
+// Convert optional parameters
+convertPath('/user/:id?', 'express');
+// '/user/{:id}'
+
+convertPath('/:id?', 'express');
+// '{:id}'
+
+// Nested optional parameters
+convertPath('/api/:version?/*path?', 'express');
+// '/api{/:version}/{/*path}'
+```
+
+### Argon-Router to Express Conversion
+
+When you need to use argon-router paths with Express.js or generate Express-compatible routes, use `convertPath`:
+
+| Argon-Router Pattern | Express Pattern | Description              |
+| -------------------- | --------------- | ------------------------ |
+| `:id<.+>`            | `:id`           | Removes regex patterns   |
+| `:id+`               | `*id`           | One or more → wildcard   |
+| `:id*`               | `*id`           | Zero or more → wildcard  |
+| `:id{.+}`            | `*id`           | Custom regex → wildcard  |
+| `:id?`               | `{:id}`         | Wraps optional params    |
+| `*id?`               | `{*id}`         | Wraps optional wildcards |
+
+**Example usage:**
+
+```ts
+import { convertPath } from '@argon-router/paths';
+
+// Argon-router paths with advanced features
+const argonPaths = [
+  '/users/:id<number>',
+  '/files/:path+',
+  '/api/:version?/:resource',
+];
+
+// Convert to Express-compatible format
+const expressPaths = argonPaths.map((path) => convertPath(path, 'express'));
+
+// Use with Express.js
+import express from 'express';
+const app = express();
+
+expressPaths.forEach((path) => {
+  app.get(path, (req, res) => {
+    // Handle request
+  });
+});
+```
+
 ## API Reference
 
 ### `compile<T>(path: T)`
@@ -347,15 +430,28 @@ function parseUser(url: string) {
 Compile a path pattern into parser and builder functions.
 
 **Parameters:**
+
 - `path: string` - The path pattern to compile
 
 **Returns:**
+
 ```typescript
 {
   parse: (path: string) => { path: string; params: Params } | null;
   build: (params: Params) => string;
 }
 ```
+
+### `convertPath(path: string, mode: 'express')`
+
+Convert an argon-router path pattern to another router format.
+
+**Parameters:**
+
+- `path: string` - The argon-router path pattern to convert
+- `mode: 'express'` - The target router format
+
+**Returns:** `string` - The converted path pattern in the target format
 
 ### `ParseUrlParams<T>`
 
@@ -370,4 +466,3 @@ type Params = ParseUrlParams<'/user/:id<number>'>;
 
 - [createRoute](/core/create-route) - Use with argon-router
 - [createRouter](/core/create-router) - Router with path compilation
-
