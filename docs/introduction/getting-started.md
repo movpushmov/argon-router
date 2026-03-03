@@ -7,8 +7,9 @@ title: Getting started
 ## Installation
 
 ::: warning
-argon-router is not production ready yet and still may have bugs and unstable API.
-If you found bug — please report it on GitHub.
+
+At the moment `argon-router` is in stage of stable release candidate. Merging of `atomic-router` and `argon-router` merge will be start at Q2 2026. Current API will be frozen until argon-router isn't merged with atomic-router.
+
 :::
 
 ::: code-group

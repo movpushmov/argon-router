@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { RouteView } from './types';
-import type { InternalRoute } from '@argon-router/core/lib/types';
+import type { InternalRoute } from '@argon-router/core';
 import { useProvidedScope } from 'effector-react';
-import { is, Router } from '@argon-router/core';
+import { is } from '@argon-router/core';
 import { createWatch, Subscription, type Scope, type Store } from 'effector';
 
 function getStoreValue<T>(store: Store<T>, scope?: Scope | null) {
@@ -30,7 +30,7 @@ export function useOpenedViews(routes: RouteView[]) {
 
     for (const [index, view] of routes.entries()) {
       if (is.router(view.route)) {
-        const router = view.route as Router;
+        const router = view.route;
 
         const subscription = createWatch({
           unit: router.$activeRoutes,

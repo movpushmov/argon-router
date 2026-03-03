@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import dts from 'vite-plugin-dts';
@@ -28,14 +29,18 @@ export default defineConfig({
         },
       },
     },
-    minify: 'terser',
   },
   plugins: [
     babel({ filter: /.[jt]sx?/ }),
     dts({
       outDir: resolve(__dirname, 'dist'),
       entryRoot: resolve(__dirname, 'lib'),
-      exclude: [resolve(__dirname, 'tests')],
+      exclude: [
+        resolve(__dirname, 'tests'),
+        resolve(__dirname, '../argon-router-paths'),
+        resolve(__dirname, '../argon-router-react'),
+        resolve(__dirname, '../argon-router-react-native'),
+      ],
       staticImport: true,
       insertTypesEntry: true,
       rollupTypes: true,

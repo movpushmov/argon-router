@@ -97,7 +97,7 @@ export function createArgonStackNavigator(config: ArgonStackNavigatorConfig): {
             try {
               navigationRef.current.navigate(routeName);
             } catch (error) {
-              // Route might not be mounted yet
+              console.error(error);
             }
           }
         },

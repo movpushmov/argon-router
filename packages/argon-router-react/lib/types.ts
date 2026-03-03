@@ -7,13 +7,15 @@ interface CreateBaseRouteViewProps<T extends object | void = void> {
   children?: CreateBaseRouteViewProps<any>[];
 }
 
-export interface CreateRouteViewProps<T extends object | void = void>
-  extends CreateBaseRouteViewProps<T> {
+export interface CreateRouteViewProps<
+  T extends object | void = void,
+> extends CreateBaseRouteViewProps<T> {
   view: ComponentType;
 }
 
-export interface CreateLazyRouteViewProps<T extends object | void = void>
-  extends CreateBaseRouteViewProps<T> {
+export interface CreateLazyRouteViewProps<
+  T extends object | void = void,
+> extends CreateBaseRouteViewProps<T> {
   view: () => Promise<{ default: ComponentType }>;
   fallback?: ComponentType;
 }

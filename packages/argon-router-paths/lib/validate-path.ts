@@ -36,7 +36,8 @@ type ValidateTypes<GenTypes> = GenTypes extends 'number'
   ? 'valid'
   : GenTypes extends ''
     ? ['invalid', `<number,union>`]
-    : GenTypes extends string | `${string}|${string}`
+    : // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+      GenTypes extends `${string}|${string}` | string
       ? 'valid'
       : ['invalid', `<number,union>`];
 
@@ -119,6 +120,7 @@ type Case30 = '/:id<hello|world>{err,err}+';
 type Case31 = '/:id<hello|world>{1,err}';
 type Case32 = '/:id<hello|world>{err,1}+';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Tests = [
   Assert<IsEqual<ValidatePath<Case1>, Case1>>,
   Assert<IsEqual<ValidatePath<Case2>, Case2>>,

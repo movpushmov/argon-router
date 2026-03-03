@@ -107,6 +107,7 @@ export function createArgonBottomTabsNavigator(
             try {
               navigationRef.current.navigate(routeName);
             } catch (error) {
+              console.error(error);
               // Route might not be mounted yet
             }
           }

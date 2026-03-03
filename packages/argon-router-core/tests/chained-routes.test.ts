@@ -27,7 +27,7 @@ describe('chained routes', () => {
     const checkAuthorizationFx = createEffect<
       RouteOpenedPayload<{ id: string }>,
       boolean
-    >(async ({ params }) => params.id !== '0');
+    >(({ params }) => params.id !== '0');
 
     sample({
       clock: checkAuthorizationFx.doneData,

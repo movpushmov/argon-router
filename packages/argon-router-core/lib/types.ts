@@ -43,8 +43,10 @@ export interface PathlessRoute<T extends object | void = void> {
   };
 }
 
-export interface PathRoute<T extends object | void = void>
-  extends Omit<PathlessRoute<T>, '@@type'> {
+export interface PathRoute<T extends object | void = void> extends Omit<
+  PathlessRoute<T>,
+  '@@type'
+> {
   '@@type': 'path-route';
 
   path: string;
@@ -178,13 +180,15 @@ export interface InternalRouteParams<T> {
   setAsyncImport: (value: AsyncBundleImport) => void;
 }
 
-export interface InternalPathlessRoute<T extends object | void = any>
-  extends PathlessRoute<T> {
+export interface InternalPathlessRoute<
+  T extends object | void = any,
+> extends PathlessRoute<T> {
   internal: InternalRouteParams<T>;
 }
 
-export interface InternalPathRoute<T extends object | void = any>
-  extends PathRoute<T> {
+export interface InternalPathRoute<
+  T extends object | void = any,
+> extends PathRoute<T> {
   internal: InternalRouteParams<T>;
 }
 
