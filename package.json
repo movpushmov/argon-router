@@ -33,7 +33,8 @@
   "scripts": {
     "lint": "eslint",
     "build": "pnpm run -recursive -filter \"./packages/*\" build",
-    "test": "pnpm run -recursive -filter \"./packages/*\" test -- --silent"
+    "test": "pnpm run -recursive -filter \"./packages/*\" test -- --silent",
+    "release": "changeset version && changeset publish"
   },
   "husky": {
     "hooks": {
