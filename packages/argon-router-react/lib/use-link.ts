@@ -1,5 +1,5 @@
-import type { Route, RouteOpenedPayload } from '@argon-router/core';
-import type { InternalRoute } from '@argon-router/core/lib/types';
+import type { Route } from '@argon-router/core';
+import type { InternalRoute } from '@argon-router/core';
 import { useRouterContext } from './use-router';
 import { useUnit } from 'effector-react';
 
@@ -15,8 +15,9 @@ export function useLink<T extends object | void = void>(
   const { onOpen } = useUnit(to);
 
   if (!target) {
+    console.error(`[useLink route log]`, to);
     throw new Error(
-      `[useLink] Route "${to}" not found. Maybe it is not passed into createRouter?`,
+      `[useLink] Route not found. Maybe it is not passed into createRouter?`,
     );
   }
 

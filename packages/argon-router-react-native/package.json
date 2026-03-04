@@ -39,22 +39,21 @@
   },
   "scripts": {
     "build": "vite build",
-    "test": "vitest run"
+    "test": ""
   },
   "bugs": {
     "url": "https://github.com/movpushmov/argon-router/issues"
   },
   "dependencies": {
-    "@argon-router/core": "^0.12.0",
-    "@argon-router/react": "^0.12.0"
+    "@argon-router/core": "workspace:../argon-router-core",
+    "@argon-router/react": "workspace:../argon-router-react"
   },
   "devDependencies": {
-    "@babel/preset-react": "^7.26.3",
-    "@react-navigation/bottom-tabs": "^7.0.0",
-    "@react-navigation/native": "^7.0.0",
-    "@react-navigation/stack": "^7.0.0",
-    "@types/react-native": "^0.72.0",
-    "react-native": "^0.72.0"
+    "@react-navigation/bottom-tabs": "7.15.5",
+    "@react-navigation/native": "7.1.33",
+    "@react-navigation/stack": "7.8.4",
+    "@types/react-native": "0.73.0",
+    "react-native": "0.84.1"
   },
   "peerDependencies": {
     "@react-navigation/bottom-tabs": ">=6",

@@ -24,7 +24,7 @@ import type { CreateRouteViewProps, RouteView } from './types';
 export function createRouteView<T extends object | void = void>(
   props: CreateRouteViewProps<T>,
 ): RouteView {
-  const { layout: Layout, view: View } = props;
+  const { layout: Layout, view: View, children } = props;
 
   const view = Layout
     ? () => (
@@ -37,5 +37,6 @@ export function createRouteView<T extends object | void = void>(
   return {
     route: props.route,
     view,
+    children,
   };
 }

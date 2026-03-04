@@ -45,4 +45,29 @@ describe('routes groupping', () => {
 
     expect(scope.getState(groupped.$isOpened)).toBeFalsy();
   });
+
+  test('virtual route groupping works correctly', async () => {
+    const scope = fork();
+    const virtualRoute = createVirtualRoute({
+      transformer: (_: RouteOpenedPayload<void>) => null,
+    });
+
+    const routesGroup = group([virtualRoute]);
+
+    expect(scope.getState(routesGroup.$isOpened)).toBeFalseWithMessage(
+      '[1] Routes group must be false cause virtual route is closed',
+    );
+
+    await allSettled(virtualRoute.open, { scope, params: {} });
+
+    expect(scope.getState(routesGroup.$isOpened)).toBeTrueWithMessage(
+      '[2] Routes group must be true cause virtual route is opened',
+    );
+
+    await allSettled(virtualRoute.close, { scope });
+
+    expect(scope.getState(routesGroup.$isOpened)).toBeFalseWithMessage(
+      '[3] Routes group must be false cause virtual route is closed',
+    );
+  });
 });

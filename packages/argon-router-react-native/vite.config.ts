@@ -34,8 +34,6 @@ export default defineConfig({
         },
       },
     },
-
-    minify: 'terser',
   },
   plugins: [
     react({
@@ -44,7 +42,12 @@ export default defineConfig({
     dts({
       outDir: resolve(__dirname, 'dist'),
       entryRoot: resolve(__dirname, 'lib'),
-      exclude: [resolve(__dirname, 'tests')],
+      exclude: [
+        resolve(__dirname, 'tests'),
+        resolve(__dirname, '../argon-router-paths'),
+        resolve(__dirname, '../argon-router-core'),
+        resolve(__dirname, '../argon-router-react'),
+      ],
       staticImport: true,
       insertTypesEntry: true,
       rollupTypes: true,

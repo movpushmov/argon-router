@@ -1,10 +1,15 @@
 import { allSettled, fork } from 'effector';
 import { Provider } from 'effector-react';
-import { createRoutesView, Outlet, RouterProvider } from '../lib';
+import {
+  createRoutesView,
+  createRouteView,
+  Outlet,
+  RouterProvider,
+} from '../lib';
 import { describe, expect, test } from 'vitest';
 import { createRoute, createRouter, historyAdapter } from '@argon-router/core';
-import { createMemoryHistory } from 'history';
-import { render, waitFor } from '@testing-library/react';
+import { createBrowserHistory, createMemoryHistory } from 'history';
+import { act, render } from '@testing-library/react';
 
 describe('Outlet Component', () => {
   test('renders child route in outlet', async () => {
@@ -57,16 +62,15 @@ describe('Outlet Component', () => {
       </Provider>,
     );
 
-    // Initially only profile should be visible
     expect(getByTestId('profile').textContent).toBe('Profile');
     expect(queryByTestId('settings')).toBeFalsy();
 
-    // Open settings route
-    await allSettled(settingsRoute.open, { scope, params: undefined });
+    await act(() =>
+      allSettled(settingsRoute.open, { scope, params: undefined }),
+    );
 
-    await waitFor(() => expect(getByTestId('settings')).toBeTruthy());
+    expect(getByTestId('settings')).toBeTruthy();
 
-    // Both profile and settings should be visible
     expect(getByTestId('profile').textContent).toBe('Profile');
     expect(getByTestId('settings').textContent).toBe('Settings');
   });
@@ -123,7 +127,6 @@ describe('Outlet Component', () => {
       </Provider>,
     );
 
-    // Outlet should be empty when no child is active
     expect(getByTestId('profile').textContent).toBe('Profile');
     expect(getByTestId('outlet-container').children.length).toBe(0);
     expect(queryByTestId('settings')).toBeFalsy();
@@ -192,24 +195,27 @@ describe('Outlet Component', () => {
       </Provider>,
     );
 
-    // Open settings
-    await allSettled(settingsRoute.open, { scope, params: undefined });
-    await waitFor(() => expect(getByTestId('settings')).toBeTruthy());
+    await act(() =>
+      allSettled(settingsRoute.open, { scope, params: undefined }),
+    );
 
+    expect(getByTestId('settings')).toBeTruthy();
     expect(getByTestId('settings').textContent).toBe('Settings');
     expect(queryByTestId('notifications')).toBeFalsy();
 
-    // Switch to notifications
-    await allSettled(notificationsRoute.open, { scope, params: undefined });
-    await waitFor(() => expect(getByTestId('notifications')).toBeTruthy());
+    await act(() =>
+      allSettled(notificationsRoute.open, { scope, params: undefined }),
+    );
 
+    expect(getByTestId('notifications')).toBeTruthy();
     expect(getByTestId('notifications').textContent).toBe('Notifications');
     expect(queryByTestId('settings')).toBeFalsy();
 
-    // Back to parent route
-    await allSettled(profileRoute.open, { scope, params: undefined });
-    await waitFor(() => expect(queryByTestId('notifications')).toBeFalsy());
+    await act(() =>
+      allSettled(profileRoute.open, { scope, params: undefined }),
+    );
 
+    expect(queryByTestId('notifications')).toBeFalsy();
     expect(getByTestId('profile').textContent).toBe('Profile');
     expect(queryByTestId('settings')).toBeFalsy();
     expect(queryByTestId('notifications')).toBeFalsy();
@@ -268,9 +274,11 @@ describe('Outlet Component', () => {
     expect(getByTestId('dashboard').textContent).toBe('Dashboard');
     expect(queryByTestId('settings')).toBeFalsy();
 
-    // Open settings route
-    await allSettled(settingsRoute.open, { scope, params: undefined });
-    await waitFor(() => expect(getByTestId('settings')).toBeTruthy());
+    await act(() =>
+      allSettled(settingsRoute.open, { scope, params: undefined }),
+    );
+
+    expect(getByTestId('settings')).toBeTruthy();
 
     expect(getByTestId('dashboard').textContent).toBe('Dashboard');
     expect(getByTestId('settings').textContent).toBe('Settings Content');
@@ -354,29 +362,97 @@ describe('Outlet Component', () => {
     expect(queryByTestId('friends')).toBeFalsy();
     expect(queryByTestId('settings')).toBeFalsy();
 
-    // Open friends route
-    await allSettled(profileRoutes.friends.open, { scope, params: undefined });
+    await act(() =>
+      allSettled(profileRoutes.friends.open, { scope, params: undefined }),
+    );
 
-    await waitFor(() => expect(getByTestId('friends')).toBeTruthy());
+    expect(getByTestId('friends')).toBeTruthy();
 
     expect(getByTestId('profile').textContent).toBe('Profile');
     expect(getByTestId('friends').textContent).toBe('Friends');
     expect(queryByTestId('settings')).toBeFalsy();
 
-    // Open settings route
-    await allSettled(profileRoutes.settings.open, { scope, params: undefined });
-    await waitFor(() => expect(getByTestId('settings')).toBeTruthy());
+    await act(() =>
+      allSettled(profileRoutes.settings.open, { scope, params: undefined }),
+    );
+
+    expect(getByTestId('settings')).toBeTruthy();
 
     expect(getByTestId('profile').textContent).toBe('Profile');
     expect(getByTestId('settings').textContent).toBe('Settings');
     expect(queryByTestId('friends')).toBeFalsy();
 
-    // Back to profile route
-    await allSettled(rootRoutes.profile.open, { scope, params: undefined });
-    await waitFor(() => expect(queryByTestId('friends')).toBeFalsy());
+    await act(() =>
+      allSettled(rootRoutes.profile.open, { scope, params: undefined }),
+    );
 
+    expect(queryByTestId('friends')).toBeFalsy();
     expect(getByTestId('profile').textContent).toBe('Profile');
     expect(queryByTestId('friends')).toBeFalsy();
     expect(queryByTestId('settings')).toBeFalsy();
+  });
+
+  test('outled with nested routes created via createRouteView', async () => {
+    const profileRoute = createRoute({ path: '/profile' });
+    const settingsRoute = createRoute({
+      path: '/settings',
+      parent: profileRoute,
+    });
+
+    const scope = fork();
+    const router = createRouter({ routes: [profileRoute, settingsRoute] });
+
+    const history = createBrowserHistory();
+    history.push('/profile/settings');
+
+    await allSettled(router.setHistory, {
+      scope,
+      params: historyAdapter(history),
+    });
+
+    const RoutesView = createRoutesView({
+      routes: [
+        createRouteView({
+          route: profileRoute,
+          view: () => (
+            <div>
+              <h1 data-testid="profile">Profile</h1>
+              <Outlet />
+            </div>
+          ),
+          children: [
+            createRouteView({
+              route: settingsRoute,
+              view: () => <p data-testid="settings">Settings</p>,
+            }),
+          ],
+        }),
+      ],
+    });
+
+    const { container } = render(
+      <Provider value={scope}>
+        <RouterProvider router={router}>
+          <RoutesView />
+        </RouterProvider>
+      </Provider>,
+    );
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <div>
+          <h1
+            data-testid="profile"
+          >
+            Profile
+          </h1>
+          <p
+            data-testid="settings"
+          >
+            Settings
+          </p>
+        </div>
+      </div>
+    `);
   });
 });

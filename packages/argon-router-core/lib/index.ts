@@ -16,6 +16,7 @@ export type {
   QueryTrackerConfig,
   VirtualRoute,
   MappedRoute,
+  InternalRoute,
 } from './types';
 
 export {

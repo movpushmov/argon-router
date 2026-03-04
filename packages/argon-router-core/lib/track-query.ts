@@ -55,7 +55,7 @@ export function trackQueryFactory({
   return <T extends ZodType>(
     config: QueryTrackerConfig<T>,
   ): QueryTracker<T> => {
-    const { parameters, forRoutes } = config;
+    const { check, parameters, forRoutes } = config;
 
     const $entered = createStore(false);
 
@@ -72,14 +72,26 @@ export function trackQueryFactory({
       target: $entered,
     });
 
-    sample({
-      source: { activeRoutes: $activeRoutes, query: $query },
-      filter: ({ activeRoutes, query }) =>
-        (!forRoutes || isForRouteActive(forRoutes, activeRoutes)) &&
-        parameters.safeParse(query).success,
-      fn: ({ query }) => parameters.safeParse(query).data,
-      target: [entered, changeEntered.prepend(() => true)],
-    });
+    if (check) {
+      sample({
+        clock: check,
+        source: { activeRoutes: $activeRoutes, query: $query },
+        filter: ({ activeRoutes, query }) =>
+          (!forRoutes || isForRouteActive(forRoutes, activeRoutes)) &&
+          parameters.safeParse(query).success,
+        fn: ({ query }) => parameters.safeParse(query).data,
+        target: [entered, changeEntered.prepend(() => true)],
+      });
+    } else {
+      sample({
+        source: { activeRoutes: $activeRoutes, query: $query },
+        filter: ({ activeRoutes, query }) =>
+          (!forRoutes || isForRouteActive(forRoutes, activeRoutes)) &&
+          parameters.safeParse(query).success,
+        fn: ({ query }) => parameters.safeParse(query).data,
+        target: [entered, changeEntered.prepend(() => true)],
+      });
+    }
 
     sample({
       source: { activeRoutes: $activeRoutes, query: $query, entered: $entered },

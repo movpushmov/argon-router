@@ -5,9 +5,11 @@ import {
   RouteOpenedPayload,
   createRouter,
   historyAdapter,
+  createVirtualRoute,
 } from '../lib';
 import { allSettled, createEffect, createEvent, fork, sample } from 'effector';
 import { createMemoryHistory } from 'history';
+import { watchCalls } from './utils';
 
 describe('chained routes', () => {
   test('authorized route', async () => {
@@ -27,7 +29,7 @@ describe('chained routes', () => {
     const checkAuthorizationFx = createEffect<
       RouteOpenedPayload<{ id: string }>,
       boolean
-    >(async ({ params }) => params.id !== '0');
+    >(({ params }) => params.id !== '0');
 
     sample({
       clock: checkAuthorizationFx.doneData,
@@ -62,5 +64,39 @@ describe('chained routes', () => {
 
     expect(scope.getState(virtual.$isOpened)).toBeTruthy();
     expect(scope.getState(virtual.$params)).toStrictEqual({ id: '1' });
+  });
+
+  test('virtual route groupping', async () => {
+    const scope = fork();
+    const virtualRoute = createVirtualRoute<RouteOpenedPayload<void>>();
+
+    const fx = createEffect((params: RouteOpenedPayload<void>) => params);
+
+    const counter = watchCalls(fx, scope);
+
+    const chainedRoute = chainRoute({
+      route: virtualRoute,
+      beforeOpen: [fx],
+      openOn: fx.doneData,
+    });
+
+    expect(counter).not.toBeCalled();
+
+    await allSettled(virtualRoute.open, {
+      scope,
+      params: { query: { test: 'abc' } },
+    });
+
+    expect(counter).toBeCalled();
+    expect(counter.mock.calls[0]).toStrictEqual([
+      {
+        query: {
+          test: 'abc',
+        },
+      },
+    ]);
+    expect(scope.getState(chainedRoute.$isOpened)).toBeTrueWithMessage(
+      'Chained route is must be opened',
+    );
   });
 });

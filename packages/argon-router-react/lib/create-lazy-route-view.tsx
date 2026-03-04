@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import type { CreateLazyRouteViewProps, RouteView } from './types';
-import type { InternalRoute } from '@argon-router/core/lib/types';
+import type { InternalRoute } from '@argon-router/core';
 
 /**
  * @description Creates Lazy route view with async bundle load

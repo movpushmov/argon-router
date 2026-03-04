@@ -44,7 +44,7 @@
     "url": "https://github.com/movpushmov/argon-router/issues"
   },
   "dependencies": {
-    "@argon-router/core": "^0.12.0"
+    "@argon-router/core": "workspace:../argon-router-core"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.26.3",
@@ -52,6 +52,7 @@
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "happy-dom": "^20.8.3",
     "jsdom": "^25.0.1"
   },
   "peerDependencies": {

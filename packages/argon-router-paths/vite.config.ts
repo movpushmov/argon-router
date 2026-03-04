@@ -12,13 +12,17 @@ export default defineConfig({
       fileName: 'index',
       formats: ['es', 'cjs'],
     },
-    minify: 'terser',
   },
   plugins: [
     babel({ filter: /.[jt]sx?/ }),
     dts({
       outDir: resolve(__dirname, 'dist'),
       entryRoot: resolve(__dirname, 'lib'),
+      exclude: [
+        resolve(__dirname, '../argon-router-core'),
+        resolve(__dirname, '../argon-router-react'),
+        resolve(__dirname, '../argon-router-react-native'),
+      ],
       staticImport: true,
       insertTypesEntry: true,
       rollupTypes: true,

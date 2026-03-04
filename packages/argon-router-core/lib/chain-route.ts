@@ -21,7 +21,7 @@ type BeforeOpenUnit<T extends object | void = void> =
   | Effect<RouteOpenedPayload<T>, any>;
 
 interface ChainRouteProps<T extends object | void = void> {
-  route: Route<T>;
+  route: Route<T> | VirtualRoute<RouteOpenedPayload<T>, T>;
   beforeOpen: BeforeOpenUnit<T> | BeforeOpenUnit<T>[];
   openOn?: Unit<any> | Unit<any>[];
   cancelOn?: Unit<any> | Unit<any>[];

@@ -1,7 +1,8 @@
-import { allSettled, createEffect, fork } from 'effector';
+import { allSettled, createEffect, createEvent, fork, sample } from 'effector';
 import { describe, expect, test, vi } from 'vitest';
 import { createRoute, createRouter, historyAdapter } from '../lib';
 import { createMemoryHistory } from 'history';
+import { watchCalls } from './utils';
 
 describe('router', () => {
   test('routes opened when path changed', async () => {
@@ -281,5 +282,32 @@ describe('router', () => {
     expect(
       scope.getState(settingsModalRoutes.security.$isOpened),
     ).toBeTrueWithMessage('settings modal security route should be opened');
+  });
+
+  test('route opened only once', async () => {
+    const scope = fork();
+    const appStarted = createEvent();
+
+    const routes = {
+      example: createRoute({
+        path: '/',
+      }),
+    };
+
+    const router = createRouter({
+      routes: [routes.example],
+    });
+
+    sample({
+      clock: appStarted,
+      fn: () => historyAdapter(createMemoryHistory()),
+      target: router.setHistory,
+    });
+
+    const calls = watchCalls(routes.example.opened, scope);
+
+    await allSettled(appStarted, { scope });
+
+    expect(calls).toBeCalledTimes(1);
   });
 });

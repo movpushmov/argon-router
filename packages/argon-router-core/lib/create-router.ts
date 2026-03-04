@@ -194,7 +194,7 @@ export function createRouter(config: RouterConfig): Router {
 
   const openRoutesByPathFx = attach({
     source: { query: $query, path: $path },
-    effect: async ({ query, path }) => {
+    effect: ({ query, path }) => {
       for (const { route, parse } of ownRoutes) {
         const matchResult = parse(path);
         const [routeClosed, routeNavigated] = [

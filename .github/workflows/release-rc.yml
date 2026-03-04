@@ -1,0 +1,43 @@
+name: Release
+
+on: workflow_dispatch
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install Dependencies
+        run: pnpm i --frozen-lockfile
+
+      - name: Building libraries
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Running tests workflow
+        run: pnpm run test
+
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm release
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

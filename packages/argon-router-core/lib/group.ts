@@ -1,6 +1,6 @@
 import { sample } from 'effector';
 import { createVirtualRoute } from './create-virtual-route';
-import type { Route } from './types';
+import type { Route, VirtualRoute } from './types';
 import { not, or } from 'patronum';
 
 /**
@@ -21,7 +21,7 @@ import { not, or } from 'patronum';
  * signUpRoute.close(); // authorizationRoute.$isOpened —> false
  * ```
  */
-export function group(routes: Route<any>[]) {
+export function group(routes: (Route<any> | VirtualRoute<any, any>)[]) {
   const virtual = createVirtualRoute({
     $isPending: or(...routes.map((route) => route.$isPending)),
   });

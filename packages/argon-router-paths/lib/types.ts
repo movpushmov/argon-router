@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 export type ReplaceAll<
   S,
   From extends string,
