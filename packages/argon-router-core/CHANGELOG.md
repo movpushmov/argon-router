@@ -1,5 +1,16 @@
 # Change Log
 
+## 1.0.0-rc.0
+
+### Major Changes
+
+- 58006a7: first argon-router stable release candidate
+
+### Patch Changes
+
+- Updated dependencies [58006a7]
+  - @argon-router/paths@1.0.0-rc.0
+
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
