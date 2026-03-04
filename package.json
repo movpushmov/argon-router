@@ -35,7 +35,7 @@
     "build": "pnpm run -recursive -filter \"./packages/*\" build",
     "test": "pnpm run -recursive -filter \"./packages/*\" test -- --silent",
     "typecheck": "tsc --noEmit",
-    "release": "changeset version && changeset publish"
+    "release": "pnpm -r publish"
   },
   "husky": {
     "hooks": {
