@@ -1,10 +1,13 @@
 import type { Route, OpenPayloadBase, Router } from '@argon-router/core';
 import type { AnchorHTMLAttributes, ComponentType, FC, ReactNode } from 'react';
 
+type LayoutComponent = ComponentType<{ children: ReactNode }>;
+type RouteViewWithLayout = RouteView & { layout?: LayoutComponent };
+
 interface CreateBaseRouteViewProps<T extends object | void = void> {
   route: Route<T> | Router;
-  layout?: ComponentType<{ children: ReactNode }>;
-  children?: CreateBaseRouteViewProps<any>[];
+  layout?: LayoutComponent;
+  children?: RouteViewWithLayout[];
 }
 
 export interface CreateRouteViewProps<

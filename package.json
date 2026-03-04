@@ -33,9 +33,7 @@
   "scripts": {
     "lint": "eslint",
     "build": "pnpm run -recursive -filter \"./packages/*\" build",
-    "test": "lerna run test",
-    "publish": "lerna publish",
-    "publish:canary": "npm run build && lerna publish --canary --preid dev --npm-tag next --no-git-tag-version"
+    "test": "pnpm run -recursive -filter \"./packages/*\" test -- --silent"
   },
   "husky": {
     "hooks": {

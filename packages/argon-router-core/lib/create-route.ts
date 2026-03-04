@@ -153,7 +153,7 @@ export function createRoute<Params>(
   });
 
   createAction({
-    clock: [navigatedFx.doneData, forceOpenParentFx.doneData],
+    clock: forceOpenParentFx.doneData,
     target: { $params },
     fn: (target, payload) => {
       if (!payload) {
@@ -173,7 +173,7 @@ export function createRoute<Params>(
   });
 
   createAction({
-    clock: [navigatedFx.doneData, forceOpenParentFx.doneData],
+    clock: forceOpenParentFx.doneData,
     target: {
       openedOnServer,
       openedOnClient,

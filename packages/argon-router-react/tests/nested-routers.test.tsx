@@ -4,13 +4,12 @@ import { createRoutesView, RouterProvider } from '../lib';
 import { describe, expect, test } from 'vitest';
 import { createRoute, createRouter, historyAdapter } from '@argon-router/core';
 import { createMemoryHistory } from 'history';
-import { render, waitFor } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 
 describe('Nested Routers', () => {
   test('basic nested router functionality', async () => {
     const scope = fork();
 
-    // Create shop router (nested)
     const shopRoutes = {
       products: createRoute({ path: '/products' }),
       cart: createRoute({ path: '/cart' }),
@@ -20,7 +19,6 @@ describe('Nested Routers', () => {
       routes: [shopRoutes.products, shopRoutes.cart],
     });
 
-    // Create main router
     const mainRoutes = {
       home: createRoute({ path: '/' }),
       settings: createRoute({ path: '/settings' }),
@@ -76,31 +74,24 @@ describe('Nested Routers', () => {
       </Provider>,
     );
 
-    // Initial state - home
     expect(getByTestId('message').textContent).toBe('home');
 
-    // Navigate to products (nested router)
-    await allSettled(shopRoutes.products.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('products'),
+    await act(() =>
+      allSettled(shopRoutes.products.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('message').textContent).toBe('products');
     expect(scope.getState(shopRoutes.products.$isOpened)).toBeTruthy();
 
-    // Navigate to cart (nested router)
-    await allSettled(shopRoutes.cart.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('cart'),
+    await act(() =>
+      allSettled(shopRoutes.cart.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('message').textContent).toBe('cart');
     expect(scope.getState(shopRoutes.cart.$isOpened)).toBeTruthy();
 
-    // Navigate to settings (main router)
-    await allSettled(mainRoutes.settings.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('settings'),
+    await act(() =>
+      allSettled(mainRoutes.settings.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('message').textContent).toBe('settings');
@@ -110,7 +101,6 @@ describe('Nested Routers', () => {
   test('multiple nested routers at same level', async () => {
     const scope = fork();
 
-    // Shop router
     const shopRoutes = {
       products: createRoute({ path: '/products' }),
       orders: createRoute({ path: '/orders' }),
@@ -120,7 +110,6 @@ describe('Nested Routers', () => {
       routes: [shopRoutes.products, shopRoutes.orders],
     });
 
-    // Blog router
     const blogRoutes = {
       posts: createRoute({ path: '/posts' }),
       authors: createRoute({ path: '/authors' }),
@@ -130,7 +119,6 @@ describe('Nested Routers', () => {
       routes: [blogRoutes.posts, blogRoutes.authors],
     });
 
-    // Main router
     const mainRoutes = {
       home: createRoute({ path: '/' }),
     };
@@ -198,37 +186,28 @@ describe('Nested Routers', () => {
       </Provider>,
     );
 
-    // Home
     expect(getByTestId('message').textContent).toBe('Home');
 
-    // Navigate to shop products
-    await allSettled(shopRoutes.products.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Shop - Products'),
+    await act(() =>
+      allSettled(shopRoutes.products.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('message').textContent).toBe('Shop - Products');
 
-    // Navigate to blog posts
-    await allSettled(blogRoutes.posts.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Blog - Posts'),
+    await act(() =>
+      allSettled(blogRoutes.posts.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('message').textContent).toBe('Blog - Posts');
 
-    // Navigate to shop orders
-    await allSettled(shopRoutes.orders.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Shop - Orders'),
+    await act(() =>
+      allSettled(shopRoutes.orders.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('message').textContent).toBe('Shop - Orders');
 
-    // Navigate to blog authors
-    await allSettled(blogRoutes.authors.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Blog - Authors'),
+    await act(() =>
+      allSettled(blogRoutes.authors.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('message').textContent).toBe('Blog - Authors');
@@ -273,23 +252,22 @@ describe('Nested Routers', () => {
       </Provider>,
     );
 
-    // No route initially
     expect(queryByTestId('message')).toBeFalsy();
 
-    // Open Module A
-    await allSettled(moduleARoute.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Module A'),
+    await act(() =>
+      allSettled(moduleARoute.open, { scope, params: undefined }),
     );
+
+    expect(getByTestId('message').textContent).toBe('Module A');
 
     expect(scope.getState(moduleARoute.$isOpened)).toBeTruthy();
     expect(scope.getState(moduleBRoute.$isOpened)).toBeFalsy();
 
-    // Open Module B (Module A should close)
-    await allSettled(moduleBRoute.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Module B'),
+    await act(() =>
+      allSettled(moduleBRoute.open, { scope, params: undefined }),
     );
+
+    expect(getByTestId('message').textContent).toBe('Module B');
 
     expect(scope.getState(moduleARoute.$isOpened)).toBeFalsy();
     expect(scope.getState(moduleBRoute.$isOpened)).toBeTruthy();
@@ -357,33 +335,29 @@ describe('Nested Routers', () => {
       </Provider>,
     );
 
-    // Initial workspace with params
     expect(getByTestId('message').textContent).toBe('Workspace');
     expect(scope.getState(mainRoutes.workspace.$params)).toEqual({
       workspaceId: 'ws-123',
     });
 
-    // Navigate to nested router route with params
-    await allSettled(projectRoutes.tasks.open, {
-      scope,
-      params: { params: { taskId: 'task-456' } },
-    });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Task View'),
+    await act(() =>
+      allSettled(projectRoutes.tasks.open, {
+        scope,
+        params: { params: { taskId: 'task-456' } },
+      }),
     );
 
     expect(getByTestId('message').textContent).toBe('Task View');
+
     expect(scope.getState(projectRoutes.tasks.$params)).toEqual({
       taskId: 'task-456',
     });
 
-    // Navigate to details
-    await allSettled(projectRoutes.details.open, {
-      scope,
-      params: undefined,
-    });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Project Details'),
+    await act(() =>
+      allSettled(projectRoutes.details.open, {
+        scope,
+        params: undefined,
+      }),
     );
 
     expect(getByTestId('message').textContent).toBe('Project Details');
@@ -469,29 +443,29 @@ describe('Nested Routers', () => {
       </Provider>,
     );
 
-    // Open Module A Page 1
-    await allSettled(moduleARoutes.page1.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Module A - Page 1'),
+    await act(() =>
+      allSettled(moduleARoutes.page1.open, { scope, params: undefined }),
     );
+
+    expect(getByTestId('message').textContent).toBe('Module A - Page 1');
 
     expect(scope.getState(moduleARoutes.page1.$isOpened)).toBeTruthy();
     expect(scope.getState(moduleBRoutes.page1.$isOpened)).toBeFalsy();
 
-    // Open Module B Page 1 (Module A should close)
-    await allSettled(moduleBRoutes.page1.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Module B - Page 1'),
+    await act(() =>
+      allSettled(moduleBRoutes.page1.open, { scope, params: undefined }),
     );
+
+    expect(getByTestId('message').textContent).toBe('Module B - Page 1');
 
     expect(scope.getState(moduleARoutes.page1.$isOpened)).toBeFalsy();
     expect(scope.getState(moduleBRoutes.page1.$isOpened)).toBeTruthy();
 
-    // Open Module A Page 2
-    await allSettled(moduleARoutes.page2.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('Module A - Page 2'),
+    await act(() =>
+      allSettled(moduleARoutes.page2.open, { scope, params: undefined }),
     );
+
+    expect(getByTestId('message').textContent).toBe('Module A - Page 2');
 
     expect(scope.getState(moduleARoutes.page2.$isOpened)).toBeTruthy();
     expect(scope.getState(moduleBRoutes.page1.$isOpened)).toBeFalsy();

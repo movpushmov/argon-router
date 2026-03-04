@@ -1,4 +1,4 @@
-import { allSettled, fork } from 'effector';
+import { allSettled, createEvent, fork } from 'effector';
 import { createMemoryHistory } from 'history';
 import { describe, expect, test } from 'vitest';
 import { createRouter, createRoute, historyAdapter } from '../lib';
@@ -364,5 +364,33 @@ describe('trackQuery', () => {
       role: 'admin',
     });
     expect(history.location.search).toBe('?id=1&role=admin');
+  });
+
+  test('check by clock', async () => {
+    const check = createEvent();
+
+    const { router, routes, scope } = await prepare();
+    const tracker = router.trackQuery({
+      check,
+      parameters: z.object({
+        id: z.string(),
+      }),
+    });
+
+    const enteredCalls = watchCalls(tracker.entered, scope);
+
+    await allSettled(routes.app.open, { scope, params: {} });
+    await allSettled(routes.home.open, { scope, params: {} });
+
+    await allSettled(routes.home.open, {
+      scope,
+      params: { query: { id: '123' } },
+    });
+
+    expect(enteredCalls).not.toBeCalled();
+
+    await allSettled(check, { scope });
+
+    expect(enteredCalls).toBeCalledWith({ id: '123' });
   });
 });

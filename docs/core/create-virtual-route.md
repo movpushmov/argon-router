@@ -6,35 +6,35 @@ Create a virtual route without a path. Virtual routes are used for UI state mana
 
 ```typescript
 function createVirtualRoute<T = void, TransformerResult = void>(
-  options?: VirtualRouteOptions<T, TransformerResult>
-): VirtualRoute<T, TransformerResult>
+  options?: VirtualRouteOptions<T, TransformerResult>,
+): VirtualRoute<T, TransformerResult>;
 ```
 
 ### Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `options` | `VirtualRouteOptions` | Optional configuration |
-| `options.beforeOpen` | `Effect[]` | Effects to run before opening the route |
-| `options.$isPending` | `Store<boolean>` | Custom pending state store |
+| Parameter             | Type                                | Description                                   |
+| --------------------- | ----------------------------------- | --------------------------------------------- |
+| `options`             | `VirtualRouteOptions`               | Optional configuration                        |
+| `options.beforeOpen`  | `Effect[]`                          | Effects to run before opening the route       |
+| `options.$isPending`  | `Store<boolean>`                    | Custom pending state store                    |
 | `options.transformer` | `(payload: T) => TransformerResult` | Transform payload before storing in `$params` |
 
 ### Returns
 
 `VirtualRoute<T, TransformerResult>` with the following properties:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `$params` | `Store<TransformerResult>` | Current route parameters |
-| `$isOpened` | `Store<boolean>` | Whether route is opened |
-| `$isPending` | `Store<boolean>` | Whether route is in pending state |
-| `open` | `Event<T>` | Open the route with parameters |
-| `opened` | `Event<T>` | Fires when route opens |
-| `openedOnClient` | `Event<T>` | Fires when opened on client side |
-| `openedOnServer` | `Event<T>` | Fires when opened on server side |
-| `close` | `Event<void>` | Close the route |
-| `closed` | `Event<void>` | Fires when route closes |
-| `cancelled` | `Event<void>` | Fires when route opening is cancelled |
+| Property         | Type                       | Description                           |
+| ---------------- | -------------------------- | ------------------------------------- |
+| `$params`        | `Store<TransformerResult>` | Current route parameters              |
+| `$isOpened`      | `Store<boolean>`           | Whether route is opened               |
+| `$isPending`     | `Store<boolean>`           | Whether route is in pending state     |
+| `open`           | `Event<T>`                 | Open the route with parameters        |
+| `opened`         | `Event<T>`                 | Fires when route opens                |
+| `openedOnClient` | `Event<T>`                 | Fires when opened on client side      |
+| `openedOnServer` | `Event<T>`                 | Fires when opened on server side      |
+| `close`          | `Event<void>`              | Close the route                       |
+| `closed`         | `Event<void>`              | Fires when route closes               |
+| `cancelled`      | `Event<void>`              | Fires when route opening is cancelled |
 
 ## Usage
 
@@ -45,7 +45,7 @@ import { createVirtualRoute } from '@argon-router/core';
 
 const route = createVirtualRoute();
 
-route.open();  // Opens the route
+route.open(); // Opens the route
 route.close(); // Closes the route
 ```
 
@@ -235,20 +235,6 @@ Virtual routes don't have paths and won't update the browser URL:
 ```ts
 // ❌ For URL routing, use createRoute instead
 const userRoute = createRoute({ path: '/user/:id' });
-```
-
-### Combine with Other Routes
-
-Virtual routes work well as building blocks:
-
-```ts
-import { chainRoute, createRoute, createVirtualRoute } from '@argon-router/core';
-
-const confirmStep = createVirtualRoute();
-const successStep = createVirtualRoute();
-const route = createRoute({ path: '/submit' });
-
-const submitFlow = chainRoute([route, confirmStep, successStep]);
 ```
 
 ## See Also

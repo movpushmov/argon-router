@@ -4,7 +4,7 @@ import { createRoutesView, Outlet, RouterProvider } from '../lib';
 import { describe, expect, test } from 'vitest';
 import { createRoute, createRouter, historyAdapter } from '@argon-router/core';
 import { createMemoryHistory } from 'history';
-import { render, waitFor } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 
 describe('Complex Example: E-commerce App with Nested Routers and Outlets', () => {
   /**
@@ -19,7 +19,6 @@ describe('Complex Example: E-commerce App with Nested Routers and Outlets', () =
   test('complete e-commerce app structure', async () => {
     const scope = fork();
 
-    // Auth Router (nested)
     const authRoutes = {
       login: createRoute({ path: '/login' }),
       register: createRoute({ path: '/register' }),
@@ -29,7 +28,6 @@ describe('Complex Example: E-commerce App with Nested Routers and Outlets', () =
       routes: [authRoutes.login, authRoutes.register],
     });
 
-    // Shop Router (nested)
     const shopRoutes = {
       products: createRoute({ path: '/products' }),
       categories: createRoute({ path: '/categories' }),
@@ -39,14 +37,12 @@ describe('Complex Example: E-commerce App with Nested Routers and Outlets', () =
       routes: [shopRoutes.products, shopRoutes.categories],
     });
 
-    // Account Routes (with nested children using Outlet)
     const accountRoutes = {
       root: createRoute({ path: '/account' }),
       profile: createRoute({ path: '/profile', parent: undefined }),
       orders: createRoute({ path: '/orders', parent: undefined }),
     };
 
-    // Make profile and orders children of account root
     accountRoutes.profile = createRoute({
       path: '/profile',
       parent: accountRoutes.root,
@@ -56,7 +52,6 @@ describe('Complex Example: E-commerce App with Nested Routers and Outlets', () =
       parent: accountRoutes.root,
     });
 
-    // Main Router
     const mainRoutes = {
       home: createRoute({ path: '/' }),
     };
@@ -80,7 +75,6 @@ describe('Complex Example: E-commerce App with Nested Routers and Outlets', () =
       params: historyAdapter(history),
     });
 
-    // Auth Views
     const AuthRoutesView = createRoutesView({
       routes: [
         {
@@ -102,7 +96,6 @@ describe('Complex Example: E-commerce App with Nested Routers and Outlets', () =
       ],
     });
 
-    // Shop Views
     const ShopRoutesView = createRoutesView({
       routes: [
         {
@@ -124,7 +117,6 @@ describe('Complex Example: E-commerce App with Nested Routers and Outlets', () =
       ],
     });
 
-    // Account Layout with Outlet
     const AccountLayout = () => (
       <div>
         <div data-testid="account-header">
@@ -136,7 +128,6 @@ describe('Complex Example: E-commerce App with Nested Routers and Outlets', () =
       </div>
     );
 
-    // Main Routes View
     const MainRoutesView = createRoutesView({
       routes: [
         {
@@ -200,63 +191,61 @@ describe('Complex Example: E-commerce App with Nested Routers and Outlets', () =
       </Provider>,
     );
 
-    // Test 1: Initial home page
     expect(getByTestId('page-title').textContent).toBe('Home');
 
-    // Test 2: Navigate to auth (nested router)
-    await allSettled(authRoutes.login.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('page-title').textContent).toBe('Authentication'),
+    await act(() =>
+      allSettled(authRoutes.login.open, { scope, params: undefined }),
     );
+
+    expect(getByTestId('page-title').textContent).toBe('Authentication');
     expect(getByTestId('auth-title').textContent).toBe('Login');
 
-    // Test 3: Switch within auth router
-    await allSettled(authRoutes.register.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('auth-title').textContent).toBe('Register'),
+    await act(() =>
+      allSettled(authRoutes.register.open, { scope, params: undefined }),
     );
 
-    // Test 4: Navigate to shop (nested router)
-    await allSettled(shopRoutes.products.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('page-title').textContent).toBe('Shop'),
+    expect(getByTestId('auth-title').textContent).toBe('Register');
+
+    await act(() =>
+      allSettled(shopRoutes.products.open, { scope, params: undefined }),
     );
+
+    expect(getByTestId('page-title').textContent).toBe('Shop');
     expect(getByTestId('shop-content').textContent).toBe('Products List');
 
-    // Test 5: Switch within shop router
-    await allSettled(shopRoutes.categories.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('shop-content').textContent).toBe('Categories'),
+    await act(() =>
+      allSettled(shopRoutes.categories.open, { scope, params: undefined }),
     );
 
-    // Test 6: Navigate to account (outlet pattern)
-    await allSettled(accountRoutes.profile.open, { scope, params: undefined });
-    await waitFor(() => expect(getByTestId('account-header')).toBeTruthy());
+    expect(getByTestId('shop-content').textContent).toBe('Categories');
 
+    await act(() =>
+      allSettled(accountRoutes.profile.open, { scope, params: undefined }),
+    );
+
+    expect(getByTestId('account-header')).toBeTruthy();
     expect(getByTestId('account-header').textContent).toContain('My Account');
     expect(getByTestId('account-page').textContent).toContain(
       'Profile Settings',
     );
 
-    // Test 7: Switch within account using outlet
-    await allSettled(accountRoutes.orders.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('account-page').textContent).toContain(
-        'Order History',
-      ),
+    await act(() =>
+      allSettled(accountRoutes.orders.open, { scope, params: undefined }),
     );
 
-    // Test 8: Back to profile within account
-    await allSettled(accountRoutes.profile.open, { scope, params: undefined });
-    await waitFor(() =>
-      expect(getByTestId('account-page').textContent).toContain(
-        'Profile Settings',
-      ),
+    expect(getByTestId('account-page').textContent).toContain('Order History');
+
+    await act(() =>
+      allSettled(accountRoutes.profile.open, { scope, params: undefined }),
     );
 
-    // Test 9: Navigate back to account root (outlet should hide children)
-    await allSettled(accountRoutes.root.open, { scope, params: undefined });
-    await waitFor(() => expect(getByTestId('account-header')).toBeTruthy());
+    expect(getByTestId('account-page').textContent).toContain(
+      'Profile Settings',
+    );
+
+    await act(() =>
+      allSettled(accountRoutes.root.open, { scope, params: undefined }),
+    );
 
     expect(getByTestId('account-header')).toBeTruthy();
     expect(getByTestId('account-content').children.length).toBe(0);

@@ -1,16 +1,8 @@
-import {
-  createEvent,
-  createStore,
-  sample,
-  split,
-  type Effect,
-  type Store,
-} from 'effector';
+import { createEvent, createStore, sample, split, type Store } from 'effector';
 
 import type { VirtualRoute } from './types';
 
 interface VirtualRouteOptions<T, TransformerResult> {
-  beforeOpen?: Effect<void, any, any>[];
   $isPending?: Store<boolean>;
   transformer?: (payload: T) => TransformerResult;
 }
@@ -19,7 +11,6 @@ export function createVirtualRoute<T = void, TransformerResult = void>(
   options: VirtualRouteOptions<T, TransformerResult> = {},
 ): VirtualRoute<T, TransformerResult> {
   const {
-    beforeOpen,
     $isPending = createStore(false),
     transformer = (payload) => (payload ?? null) as TransformerResult,
   } = options;
@@ -87,7 +78,6 @@ export function createVirtualRoute<T = void, TransformerResult = void>(
     cancelled,
 
     path: '',
-    beforeOpen,
 
     '@@unitShape': () => ({
       params: $params,

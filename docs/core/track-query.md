@@ -65,6 +65,42 @@ sample({
 });
 ```
 
+### One-time tacker
+
+```ts
+import { createRouter, createRoute } from '@argon-router/core';
+import { z } from 'zod';
+import { acceptInvitationFx } from '@shared/api';
+
+// event for global app initialization
+import { appStarted } from '@shared/global';
+
+const familyRoute = createRoute({ path: '/search' });
+
+const router = createRouter({
+  routes: [familyRoute],
+});
+
+const invitationTracker = router.trackQuery({
+  check: appStarted,
+  parameters: z.object({
+    inviteId: z.string(),
+  }),
+});
+
+sample({
+  clock: invitationTracker.entered,
+  target: acceptInvitationFx,
+});
+
+// in root of app
+// event for global app initialization
+import { appStarted } from '@shared/global';
+
+await allSettled(router.setHistory, { scope, params: ... });
+await allSettled(appStarted);
+```
+
 ### Add/Remove Query Parameters
 
 ```ts

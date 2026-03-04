@@ -16,7 +16,7 @@ import {
   historyAdapter,
 } from '@argon-router/core';
 import { createMemoryHistory } from 'history';
-import { render, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
 describe('react bindings', () => {
@@ -50,19 +50,16 @@ describe('react bindings', () => {
       </Provider>,
     );
 
-    await allSettled(route1.open, { scope, params: undefined });
+    await act(() => allSettled(route1.open, { scope, params: undefined }));
 
     expect(container.querySelector('#message')?.textContent).toBe('route1');
 
-    await allSettled(route2.open, { scope, params: undefined });
+    await act(() => allSettled(route2.open, { scope, params: undefined }));
 
     expect(container.querySelector('#message')?.textContent).toBe('route2');
 
     act(() => history.push('/not-found'));
-
-    await waitFor(() =>
-      expect(scope.getState(router.$path)).toBe('/not-found'),
-    );
+    await act(() => allSettled(scope));
 
     expect(container.querySelector('#message')?.textContent).toBe('not found');
   });
@@ -115,14 +112,14 @@ describe('react bindings', () => {
 
     await userEvent.click(container.querySelector('#link')!);
 
-    await allSettled(scope);
+    await act(() => allSettled(scope));
 
     expect(scope.getState(route2.$isOpened)).toBeTruthy();
     expect(scope.getState(route2.$params)).toStrictEqual({ id: '123' });
 
     await userEvent.click(container.querySelector('#link')!);
 
-    await allSettled(scope);
+    await act(() => allSettled(scope));
 
     expect(scope.getState(route1.$isOpened)).toBeTruthy();
   });
@@ -203,20 +200,14 @@ describe('react bindings', () => {
       </Provider>,
     );
 
-    await allSettled(authRoute.open, { scope, params: undefined });
-
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('profile'),
-    );
+    await act(() => allSettled(authRoute.open, { scope, params: undefined }));
 
     expect(getByTestId('message').textContent).toBe('profile');
 
-    await allSettled($user, { scope, params: null });
-    await allSettled(authRoute.open, { scope, params: undefined });
-
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('auth'),
-    );
+    await act(async () => {
+      await allSettled($user, { scope, params: null });
+      await allSettled(authRoute.open, { scope, params: undefined });
+    });
 
     expect(getByTestId('message').textContent).toBe('auth');
   });
@@ -262,18 +253,14 @@ describe('react bindings', () => {
       </Provider>,
     );
 
-    await allSettled(friendsRoute.open, { scope, params: undefined });
-
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('friends'),
+    await act(() =>
+      allSettled(friendsRoute.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('message').textContent).toBe('friends');
 
-    await allSettled(profileRoute.open, { scope, params: undefined });
-
-    await waitFor(() =>
-      expect(getByTestId('message').textContent).toBe('profile'),
+    await act(() =>
+      allSettled(profileRoute.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('message').textContent).toBe('profile');
@@ -339,27 +326,21 @@ describe('react bindings', () => {
       </Provider>,
     );
 
-    await allSettled(friendsRoute.open, { scope, params: undefined });
-
-    await waitFor(() =>
-      expect(getByTestId('layout').textContent).toBe('layout!'),
+    await act(() =>
+      allSettled(friendsRoute.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('layout').textContent).toBe('layout!');
     expect(getByTestId('message').textContent).toBe('friends');
 
-    await allSettled(profileRoute.open, { scope, params: undefined });
-
-    await waitFor(() =>
-      expect(getByTestId('layout').textContent).toBe('layout!'),
+    await act(() =>
+      allSettled(profileRoute.open, { scope, params: undefined }),
     );
 
     expect(getByTestId('layout').textContent).toBe('layout!');
     expect(getByTestId('message').textContent).toBe('profile');
 
-    await allSettled(authRoute.open, { scope, params: undefined });
-
-    await waitFor(() => expect(queryByTestId('layout')).toBeFalsy());
+    await act(() => allSettled(authRoute.open, { scope, params: undefined }));
 
     expect(queryByTestId('layout')).toBeFalsy();
     expect(getByTestId('message').textContent).toBe('auth');
