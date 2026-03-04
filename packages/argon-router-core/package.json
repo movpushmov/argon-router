@@ -54,7 +54,7 @@
     "zod": "^3.25.71"
   },
   "dependencies": {
-    "@argon-router/paths": "workspace:../argon-router-paths"
+    "@argon-router/paths": "workspace:*"
   },
   "gitHead": "9832d6cd282d6abd33c26ba4d03b9a1176110fc4"
 }

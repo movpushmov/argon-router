@@ -112,7 +112,7 @@ importers:
   packages/argon-router-core:
     dependencies:
       '@argon-router/paths':
-        specifier: workspace:../argon-router-paths
+        specifier: workspace:*
         version: link:../argon-router-paths
       effector:
         specifier: '>=23'
@@ -139,7 +139,7 @@ importers:
   packages/argon-router-react:
     dependencies:
       '@argon-router/core':
-        specifier: workspace:../argon-router-core
+        specifier: workspace:*
         version: link:../argon-router-core
       effector:
         specifier: '>=23'
@@ -176,10 +176,10 @@ importers:
   packages/argon-router-react-native:
     dependencies:
       '@argon-router/core':
-        specifier: workspace:../argon-router-core
+        specifier: workspace:*
         version: link:../argon-router-core
       '@argon-router/react':
-        specifier: workspace:../argon-router-react
+        specifier: workspace:*
         version: link:../argon-router-react
       effector:
         specifier: '>=23'

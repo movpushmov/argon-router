@@ -45,8 +45,8 @@
     "url": "https://github.com/movpushmov/argon-router/issues"
   },
   "dependencies": {
-    "@argon-router/core": "workspace:../argon-router-core",
-    "@argon-router/react": "workspace:../argon-router-react"
+    "@argon-router/core": "workspace:*",
+    "@argon-router/react": "workspace:*"
   },
   "devDependencies": {
     "@react-navigation/bottom-tabs": "7.15.5",
