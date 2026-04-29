@@ -8,6 +8,7 @@
     "@argon-router/react-native": "0.12.0"
   },
   "changesets": [
+    "big-cougars-make",
     "empty-buttons-glow"
   ]
 }
