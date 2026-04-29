@@ -70,7 +70,7 @@ describe('react-native navigators', () => {
       router,
       routes,
       initialRouteName: '/home',
-      screenOptions: { animationEnabled: false, headerShown: false },
+      screenOptions: { animation: 'none', headerShown: false },
     });
 
     renderWithNavigation(router, scope, <Navigator />);
