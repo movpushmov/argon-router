@@ -6,7 +6,7 @@ import {
 } from '@react-navigation/bottom-tabs';
 import type { Router, Route } from '@argon-router/core';
 import type { RouteView } from '@argon-router/react';
-import { createWatch } from 'effector';
+import { createWatch, scopeBind } from 'effector';
 import { useProvidedScope } from 'effector-react';
 
 export type ArgonBottomTabsNavigatorConfig = {
@@ -40,6 +40,16 @@ function getRouteTitle(route: Route<any> | Router, index: number): string {
     return pathParts[pathParts.length - 1] || `Tab ${index + 1}`;
   }
   return `Tab ${index + 1}`;
+}
+
+function createScreenComponent(routeView: RouteView): React.FC {
+  const View = routeView.view;
+
+  function ArgonRouteScreen() {
+    return <View />;
+  }
+
+  return ArgonRouteScreen;
 }
 
 /**
@@ -78,6 +88,10 @@ export function createArgonBottomTabsNavigator(
     screenOptions,
     initialRouteName,
   } = config;
+  const screens = routes.map((routeView) => ({
+    routeView,
+    component: createScreenComponent(routeView),
+  }));
 
   const ArgonBottomTabsNavigator = function ArgonBottomTabsNavigator() {
     const scope = useProvidedScope();
@@ -118,23 +132,38 @@ export function createArgonBottomTabsNavigator(
     }, [scope]);
 
     // Handle tab press to open route in Argon Router
-    const createTabPressHandler = React.useCallback((routeView: RouteView) => {
-      return () => {
-        if (
-          'open' in routeView.route &&
-          typeof routeView.route.open === 'function'
-        ) {
-          routeView.route.open();
-        }
-      };
-    }, []);
+    const createTabPressHandler = React.useCallback(
+      (routeView: RouteView) => {
+        return () => {
+          const openRoute =
+            scope && 'open' in routeView.route
+              ? scopeBind(routeView.route.open, { scope })
+              : 'open' in routeView.route
+                ? routeView.route.open
+                : null;
+
+          if (
+            openRoute &&
+            'open' in routeView.route &&
+            typeof routeView.route.open === 'function'
+          ) {
+            openRoute();
+          }
+        };
+      },
+      [scope],
+    );
 
     return (
       <Tab.Navigator
         screenOptions={screenOptions}
         initialRouteName={initialRouteName}
+        screenListeners={({ navigation }) => {
+          navigationRef.current = navigation;
+          return {};
+        }}
       >
-        {routes.map((routeView, index) => {
+        {screens.map(({ routeView, component }, index) => {
           const routeName = getRouteName(routeView.route, index);
           const routeKey = getRouteKey(routeView.route, index);
           const title = getRouteTitle(routeView.route, index);
@@ -143,7 +172,7 @@ export function createArgonBottomTabsNavigator(
             <Tab.Screen
               key={routeKey}
               name={routeName}
-              component={routeView.view}
+              component={component}
               options={{
                 title,
                 ...screenOptions,

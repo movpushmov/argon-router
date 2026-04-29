@@ -7,8 +7,6 @@ import {
 import type { Router, Route } from '@argon-router/core';
 import type { RouteView } from '@argon-router/react';
 import { useOpenedViews } from '@argon-router/react';
-import { createWatch } from 'effector';
-import { useProvidedScope } from 'effector-react';
 
 export type ArgonStackNavigatorConfig = {
   router: Router;
@@ -33,6 +31,16 @@ function getRouteName(route: Route<any> | Router, index: number): string {
     return route.path;
   }
   return `Route${index}`;
+}
+
+function createScreenComponent(routeView: RouteView): React.FC {
+  const View = routeView.view;
+
+  function ArgonRouteScreen() {
+    return <View />;
+  }
+
+  return ArgonRouteScreen;
 }
 
 /**
@@ -65,53 +73,49 @@ function getRouteName(route: Route<any> | Router, index: number): string {
 export function createArgonStackNavigator(config: ArgonStackNavigatorConfig): {
   Navigator: React.ComponentType;
 } {
-  const {
-    router: argonRouter,
-    routes,
-    screenOptions,
-    initialRouteName,
-  } = config;
+  const { routes, screenOptions, initialRouteName } = config;
+  const screens = routes.map((routeView) => ({
+    routeView,
+    component: createScreenComponent(routeView),
+  }));
 
   const ArgonStackNavigator = function ArgonStackNavigator() {
-    const scope = useProvidedScope();
     const openedViews = useOpenedViews(routes);
     const navigationRef = React.useRef<any>(null);
 
     // Sync Argon Router state with React Navigation
     useEffect(() => {
-      const subscription = createWatch({
-        unit: argonRouter.$path,
-        scope: scope ?? undefined,
-        fn: (path) => {
-          if (!navigationRef.current || !path) return;
+      if (!navigationRef.current) return;
 
-          // Find the matching route for the current path
-          const matchingView = openedViews[openedViews.length - 1];
-          if (matchingView) {
-            const routeName = getRouteName(
-              matchingView.route,
-              routes.findIndex((r) => r.route === matchingView.route),
-            );
+      const matchingView = openedViews[openedViews.length - 1];
+      if (!matchingView) return;
 
-            // Navigate to the route in React Navigation
-            try {
-              navigationRef.current.navigate(routeName);
-            } catch (error) {
-              console.error(error);
-            }
-          }
-        },
-      });
+      const matchingIndex = routes.findIndex(
+        (r) => r.route === matchingView.route,
+      );
 
-      return () => subscription.unsubscribe();
-    }, [openedViews, scope]);
+      if (matchingIndex === -1) return;
+
+      const routeName = getRouteName(matchingView.route, matchingIndex);
+
+      // Navigate to the route in React Navigation
+      try {
+        navigationRef.current.navigate(routeName);
+      } catch (error) {
+        console.error(error);
+      }
+    }, [openedViews]);
 
     return (
       <Stack.Navigator
         screenOptions={screenOptions}
         initialRouteName={initialRouteName}
+        screenListeners={({ navigation }) => {
+          navigationRef.current = navigation;
+          return {};
+        }}
       >
-        {routes.map((routeView, index) => {
+        {screens.map(({ routeView, component }, index) => {
           const routeName = getRouteName(routeView.route, index);
           const routeKey = getRouteKey(routeView.route, index);
 
@@ -119,7 +123,7 @@ export function createArgonStackNavigator(config: ArgonStackNavigatorConfig): {
             <Stack.Screen
               key={routeKey}
               name={routeName}
-              component={routeView.view}
+              component={component}
               options={screenOptions}
             />
           );

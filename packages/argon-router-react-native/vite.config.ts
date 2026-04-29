@@ -1,10 +1,14 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
 import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
+import { reactNative } from '@srsholmes/vitest-react-native';
 
 export default defineConfig({
   mode: 'production',
+  resolve: {
+    dedupe: ['effector', 'effector-react', 'react', 'react/jsx-runtime'],
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'lib/index.ts'),
@@ -39,6 +43,7 @@ export default defineConfig({
     react({
       jsxRuntime: 'automatic',
     }),
+    reactNative(),
     dts({
       outDir: resolve(__dirname, 'dist'),
       entryRoot: resolve(__dirname, 'lib'),
@@ -53,4 +58,7 @@ export default defineConfig({
       rollupTypes: true,
     }),
   ],
+  test: {
+    setupFiles: ['./tests/setup.ts'],
+  },
 });
